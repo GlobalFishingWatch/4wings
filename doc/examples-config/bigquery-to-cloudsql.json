@@ -1,0 +1,71 @@
+{
+  "source": {
+    "query": "select lat, lon, timestamp, id, distance from mytable",
+    "type": "bigquery",
+    "projectId": "my-project-id"
+  },
+  "cache": {
+    "bucket": "my-bucket",
+    "dir": "tiles",
+    "projectId": "my-project-id"
+  },
+  "target": {
+    "type": "cloudsql",
+    "projectId": "my-project-id",
+    "tmpStorage": {
+      "bucket": "my-bucket",
+      "dir": "tmp"
+    },
+    "database": {
+      "user": "postgres",
+      "password": "postgres",
+      "projectId": "my-project-id",
+      "region": "us-central1",
+      "instanceId": "my-cloud-sql",
+      "database": "postgres"
+    },
+    "columnsDefinition": {
+      "id": "VARCHAR(100)",
+      "distance": "FLOAT"
+    }
+  },
+  "name": "my_dataset",
+  "maxZoom": 12,
+  "cellsByZoom": [
+    100000000000,
+    50000000000,
+    20000000000,
+    12500000000,
+    2000000000,
+    500000000,
+    125000000,
+    20000000,
+    5000000,
+    1250000,
+    200000,
+    50000,
+    12500
+  ],
+  "heatmap": {
+    "temporalAggregation": true,
+    "cache": true,
+    "time": 86400,
+    "fromLevelCache": 0,
+    "toLevelCache": 2,
+    "columns": [
+      {
+        "column": "id",
+        "func": "count",
+        "alias": "count"
+      }
+    ]
+  },
+  "position": {
+    "cache": false,
+    "columns": ["id"],
+    "fromLevelCache": 1,
+    "toLevelCache": 1
+  },
+  "extraColumns": ["id", "distance"],
+  "searchColumns": ["id", "distance"]
+}

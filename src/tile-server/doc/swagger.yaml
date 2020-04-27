@@ -1,0 +1,271 @@
+openapi: '3.0.0'
+info:
+  version: 1.0.0
+  title: Fast Tiles API
+  description: |
+    API to obtain tiles and info of the dataset ingested by the fast tiles process
+
+paths:
+  '/v1/{dataset}/tile/{type}/{Z}/{X}/{Y}':
+    get:
+      tags:
+        - 4wings
+      summary: |
+        Return MVT or intArray tile for the dataset and type selected for Z,X,Y tile coords
+      description: |
+        Return MVT or intArray tile for the dataset and type selected for Z,X,Y tile coords
+      security:
+        - apiKey: []
+      parameters:
+        - in: path
+          name: dataset
+          schema:
+            type: string
+          required: true
+          description: |
+            Name of the dataset. Available datasets (fishing, viirs_airflow, panamenian, panamenian_v2, fishing_hour)
+        - in: path
+          name: type
+          schema:
+            type: string
+          required: true
+          description: |
+            Type of the dataset. Possible values -> heatmap or position
+        - in: path
+          name: Z
+          schema:
+            type: integer
+            minimum: 0
+          required: true
+          description: |
+            Zoom. Max value <maxZoom configured> and min value 0
+        - in: path
+          name: X
+          schema:
+            type: integer
+          required: true
+          description: |
+            X Coordinate
+        - in: path
+          name: Y
+          schema:
+            type: integer
+          required: true
+          description: |
+            Y coordinate
+        - in: query
+          name: filters
+          schema:
+            type: string
+          required: false
+          example: timestamp > '2019-12-01 00:00:00' and timestamp < '2020-01-01 00:00:00' and vesselid IN ('aaaa-aaa-aa')
+          description: |
+            Statements to filter the data. All dataset can be filtered by timestamp, lat, lon and columns configured in the searchColumns key of the configuration file. Possible comparators < > <= => != == IN
+        - in: query
+          name: format
+          schema:
+            type: string
+          required: false
+          example: format=intArray
+          description: |
+            if format=intArray, the tile is generated using the custom PBF format.
+        - in: query
+          name: temporal-aggregation
+          schema:
+            type: boolean
+            default: false
+          description: |
+            In the heatmap tiles, if it's true, the tile won't be generated grouping by time. If false, the heatmap will be generated grouping by time.
+
+      responses:
+        '200':
+          description: |
+            MVT tile.
+        '302':
+          description: |
+            If tile is cached, return a redirect to GCS
+        '400':
+          description: Bad request. Invalid or wrong parameters were provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  '/{dataset}/statistics':
+    get:
+      tags:
+        - FastTiles
+      summary: |
+        Return statistics for the heatmap tiles for all zoom levels
+      description: |
+        Return statistics for the heatmap tiles for all zoom levels
+      parameters:
+        - in: path
+          name: dataset
+          schema:
+            type: string
+          required: true
+          description: |
+            Name of the dataset
+        - in: path
+          name: Z
+          schema:
+            type: integer
+            minimum: 0
+          required: true
+          description: |
+            Zoom. Max value <maxZoom configured> and min value 0
+        - in: query
+          name: filters
+          schema:
+            type: string
+          required: false
+          example: timestamp > '2019-12-01 00:00:00' and timestamp < '2020-01-01 00:00:00' and vesselid IN ('aaaa-aaa-aa')
+          description: |
+            Statements to filter the data. All dataset can be filtered by timestamp, lat, lon and columns configured in the searchColumns key of the configuration file. Possible comparators < > <= => != == IN
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Statistic'
+          description: |
+            Expected response to a successful request.
+        '401':
+          description: Unauthorized, either the api key is invalid or expired.
+        '400':
+          description: Bad request. Invalid or wrong parameters were provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  '/{dataset}/statistics/{Z}':
+    get:
+      tags:
+        - FastTiles
+      summary: |
+        Return statistics for the heatmap tiles in a specific zoom level
+      description: |
+        Return statistics for the heatmap tiles in a specific zoom level
+      parameters:
+        - in: path
+          name: dataset
+          schema:
+            type: string
+          required: true
+          description: |
+            Name of the dataset
+        - in: path
+          name: Z
+          schema:
+            type: integer
+            minimum: 0
+          required: true
+          description: |
+            Zoom. Max value <maxZoom configured> and min value 0
+        - in: query
+          name: filters
+          schema:
+            type: string
+          required: false
+          example: timestamp > '2019-12-01 00:00:00' and timestamp < '2020-01-01 00:00:00' and vesselid IN ('aaaa-aaa-aa')
+          description: |
+            Statements to filter the data. All dataset can be filtered by timestamp, lat, lon and columns configured in the searchColumns key of the configuration file. Possible comparators < > <= => != == IN
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+          description: |
+            Expected response to a successful request.
+        '401':
+          description: Unauthorized, either the api key is invalid or expired.
+        '400':
+          description: Bad request. Invalid or wrong parameters were provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+  schemas:
+    ValidationError:
+      type: object
+      required:
+        - fields
+        - general
+      properties:
+        fields:
+          type: array
+          items:
+            type: object
+            required:
+              - field
+              - errors
+            properties:
+              field:
+                type: string
+              errors:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - code
+                    - description
+                  properties:
+                    code:
+                      type: string
+                    description:
+                      type: string
+        general:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+              - description
+            properties:
+              code:
+                type: string
+              description:
+                type: string
+    Statistic:
+      type: object
+      description: Dataset info
+      required:
+        - max
+        - min
+        - avg
+        - median
+        - startDate
+        - endDate
+      properties:
+        max:
+          type: number
+          description: Max value
+        min:
+          type: number
+          description: Min value
+        avg:
+          type: number
+          description: Average value
+        median:
+          type: number
+          description: Median value
+        startDate:
+          type: string
+          description: Min date in the dataset
+        endDate:
+          type: string
+          description: Max date in the dataset

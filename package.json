@@ -1,0 +1,69 @@
+{
+  "name": "4wings",
+  "version": "1.0.0",
+  "description": "Importer, tile server and generate-tiles process for 4wings project",
+  "main": "index.js",
+  "scripts": {
+    "watch": "NODE_ENV=dev nodemon --watch src -e ts,tsx --exec node index.js",
+    "build": "tslint --project . && tsc",
+    "start": "node index.js",
+    "test": "tslint --project ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/koa": "^2.11.3",
+    "@types/node": "^13.13.1",
+    "nodemon": "^2.0.3"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^4.7.0",
+    "@google-cloud/storage": "^4.7.0",
+    "@koa/cors": "^3.0.0",
+    "@koa/router": "^8.0.8",
+    "@mapbox/tilebelt": "^1.0.1",
+    "args-parser": "^1.1.0",
+    "axios": "^0.19.2",
+    "csv-parser": "^2.3.2",
+    "csv-write-stream": "^2.0.0",
+    "dateformat": "^3.0.3",
+    "ejs": "^3.0.2",
+    "geojson": "^0.5.0",
+    "geojson-vt": "^3.2.1",
+    "google-auth-library": "^6.0.0",
+    "iso-country-codes": "0.0.5",
+    "koa": "^2.11.0",
+    "koa-compress": "^3.1.0",
+    "koa-helmet": "^5.2.0",
+    "koa-logger": "^3.2.1",
+    "koa-mount": "^4.0.0",
+    "koa-static": "^5.0.0",
+    "pbf": "^3.2.1",
+    "pg": "^8.0.2",
+    "pg-copy-streams": "^2.2.2",
+    "protobufjs": "^6.9.0",
+    "rimraf": "^3.0.2",
+    "through2": "^3.0.1",
+    "ts-node": "^8.9.0",
+    "tsconfig-paths": "^3.9.0",
+    "tslint": "^6.1.1",
+    "tslint-config-airbnb": "^5.11.2",
+    "typescript": "^3.8.3",
+    "vt-pbf": "^3.1.1",
+    "winston": "^3.2.1",
+    "workerpool": "^5.0.4"
+  },
+  "prettier": {
+    "trailingComma": "all",
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true,
+    "object-curly-newline": [
+      "error",
+      {
+        "multiline": true
+      }
+    ]
+  }
+}

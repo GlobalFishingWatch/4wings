@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Display a map</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.0/mapbox-gl.js"></script>
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'noto_emojiregular';
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .form {
+        background: rgba(255, 255, 255, 0.5);
+
+        position: fixed;
+        z-index: 1000;
+        left: 20px;
+        display: inline-block;
+        padding: 20px;
+        top: 20px;
+      }
+      .statistics-panel {
+        background: rgba(255, 255, 255, 0.9);
+
+        position: fixed;
+        z-index: 1000;
+        right: 20px;
+        display: inline-block;
+        padding: 20px;
+        top: 20px;
+      }
+      #button {
+        position: fixed;
+        z-index: 1000;
+        right: 200px;
+        display: inline-block;
+        padding: 20px;
+        top: 20px;
+      }
+      .form h3 {
+        margin-top: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form">
+      <h3>Select a layer:</h3>
+      <select id="layers">
+        <option></option>
+        <option
+          value="ra_carriers-heatmap?filters=timestamp >= '2017-01-01T00:00:00' AND timestamp <= '2019-12-31T00:00:00'"
+          >Test - Heatmap</option
+        >
+        <option value="ra_carriers-position">Test - position</option>
+      </select>
+    </div>
+    <button id="button">Play</button>
+    <div class="statistics-panel">
+      <pre id="statistics"></pre>
+    </div>
+    <div id="map"></div>
+    <script type="text/javascript">
+      document
+        .getElementById('layers')
+        .addEventListener('change', function (event) {
+          addLayer(event.target, event.target.value);
+        });
+      var interval;
+      document.getElementById('button').addEventListener('click', () => {
+        function addFilter(value) {
+          document.getElementById('button').innerHTML = new Date(
+            value * 24 * 60 * 60 * 1000,
+          )
+            .toISOString()
+            .slice(0, 10);
+          map.setFilter('main', ['has', value + '']);
+          map.setPaintProperty('main', 'text-color', [
+            'case',
+            ['==', ['get', value + '_flag'], 'ESP'],
+            '#ff0000',
+            ['==', ['get', value + '_flag'], 'ITA'],
+            '#00ff00',
+            ['==', ['get', value + '_flag'], 'FRA'],
+            '#0000ff',
+            '#00ffff',
+          ]);
+          map.setLayoutProperty(
+            'main',
+            'text-field',
+            '{' + value + '_flag}({' + value + '})',
+          );
+        }
+        if (interval) {
+          clearInterval(interval);
+          document.getElementById('button').innerHTML = 'Play';
+          return;
+        }
+        var initialValue = 16070;
+        interval = setInterval(() => {
+          console.log('interval');
+          if (initialValue > 16436) {
+            initialValue = 16070;
+          }
+          addFilter(++initialValue);
+        }, 1000);
+      });
+      var selectedLayer = null;
+
+      function addLayer(target, layer) {
+        if (!layer) {
+          return;
+        }
+        selectedLayer = layer;
+        try {
+          map.removeLayer('main');
+          map.removeSource('main');
+        } catch (err) {}
+
+        const filters =
+          selectedLayer.indexOf('?') >= 0 ? selectedLayer.split('?')[1] : '';
+        const parts =
+          selectedLayer.indexOf('?') >= 0
+            ? selectedLayer.split('?')[0].split('-')
+            : selectedLayer.split('-');
+
+        var layerCfg = {
+          id: 'main',
+          source: {
+            type: 'vector',
+            tiles: [
+              window.location.protocol +
+                '//' +
+                window.location.host +
+                '/v1/' +
+                parts.slice(0, parts.length - 1).join('-') +
+                '/tile/' +
+                parts[1] +
+                `/{z}/{x}/{y}?${filters}`,
+            ],
+          },
+          'source-layer': parts[0],
+          type: 'fill',
+          paint: {
+            'fill-color': 'red',
+          },
+        };
+
+        if (selectedLayer.indexOf('mode') >= 0) {
+          layerCfg.type = 'symbol';
+          layerCfg.paint = {
+            'text-halo-color': 'white',
+            'text-halo-width': 2,
+            'text-color': [
+              'case',
+              ['==', ['get', '16071_flag'], 'ESP'],
+              '#ff0000',
+              ['==', ['get', '16071_flag'], 'ITA'],
+              '#00ff00',
+              ['==', ['get', '16071_flag'], 'FRA'],
+              '#0000ff',
+              '#00ffff',
+            ],
+          };
+          layerCfg.layout = {
+            'text-field': '{16100_flag}({16100})',
+            'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+            'text-size': 14,
+            // 'icon-allow-overlap': true,
+          };
+        } else {
+          if (parts[1] === 'position') {
+            layerCfg.paint = {
+              'circle-radius': 2,
+              'circle-color': '#22b3fb',
+              'circle-stroke-color': '#22b3fb',
+              'circle-stroke-width': 1,
+              'circle-opacity': 0.5,
+            };
+            layerCfg.type = 'circle';
+          }
+        }
+
+        console.log(layerCfg);
+        layer = map.addLayer(layerCfg);
+
+        loadZoom();
+      }
+      let loadedZoom = null;
+      function loadZoom() {
+        if (!selectedLayer) {
+          return;
+        }
+        var zoom = Math.floor(map.getZoom());
+        console.log(zoom);
+        if (loadedZoom !== undefined && loadedZoom === zoom) {
+          return;
+        }
+        loadedZoom = zoom;
+        const filters =
+          selectedLayer.indexOf('?') >= 0 ? selectedLayer.split('?')[1] : '';
+        const parts =
+          selectedLayer.indexOf('?') >= 0
+            ? selectedLayer.split('?')[0].split('-')
+            : selectedLayer.split('-');
+        fetch(
+          window.location.protocol +
+            '//' +
+            window.location.host +
+            '/v1/' +
+            parts.slice(0, parts.length - 1).join('-') +
+            '/statistics/' +
+            zoom +
+            '?' +
+            filters,
+        )
+          .then((response) => {
+            return response.json();
+          })
+          .then((data) => {
+            data.zoom = zoom;
+            document.getElementById('statistics').innerHTML = JSON.stringify(
+              data,
+              null,
+              4,
+            );
+          });
+      }
+    </script>
+    <script>
+      mapboxgl.accessToken =
+        'pk.eyJ1IjoicmFyZXEiLCJhIjoiY2sxcWdtdHRqMHp6aDNvcWZiNHRta2cwayJ9.Lwr7DNW75VVTkNuT5M8kMg';
+      var map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/dark-v10', // stylesheet location
+        center: [-3.6694335937500004, 40.455307212131494], // starting position [lng, lat]
+        zoom: 3, // starting zoom
+        minZoom: 0,
+        maxZoom: 12,
+      });
+      map.showTileBoundaries = true;
+      map.on('zoom', () => {
+        loadZoom();
+      });
+      // map.scrollZoom.disable();
+      map.on('load', function () {
+        map.addLayer(
+          {
+            id: 'mapillary',
+            type: 'line',
+            source: {
+              type: 'vector',
+              tiles: [
+                'https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt',
+              ],
+              minzoom: 6,
+              maxzoom: 14,
+            },
+
+            'source-layer': 'mapillary-sequences',
+            layout: {
+              'line-cap': 'round',
+              'line-join': 'round',
+            },
+            paint: {
+              'line-opacity': 0.6,
+              'line-color': 'rgb(53, 175, 109)',
+              'line-width': 2,
+            },
+          },
+          'waterway-label',
+        );
+        var cell = 0;
+        const el = document.getElementById('date');
+
+        map.on('click', 'main', function (e) {
+          console.log(e.features[0]);
+          const properties = e.features[0].properties;
+          var coordinates = e.features[0].geometry.coordinates.slice();
+          const keys = Object.keys(properties).filter((c) => c !== 'cell');
+
+          const html = keys.map(
+            (k) => `<li>${k}:${e.features[0].properties[k]}</li>`,
+          );
+          var description = `<p>Position:
+            <ul>
+              ${html.join('')}              
+            </ul>
+            </p>`;
+
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
+        });
+
+        map.on('mouseenter', 'main', function () {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'main', function () {
+          map.getCanvas().style.cursor = '';
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+<% for (let i = 0; i <= maxZoom; i++) { %>
+
+CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%> (
+ lat FLOAT8 NOT NULL,
+ lon FLOAT8 NOT NULL,<% Object.keys(extraColumns).forEach(function(key){ %>
+ <%= key %> <%= extraColumns[key]%>,<% }); %>
+ timestamp timestamp NOT NULL,
+ pos <%= i >= 15 ? 'BIGINT': 'INTEGER' %> NOT NULL,
+ <% if (locals.heatmap) { %>
+ htime integer,
+ <% } %>
+ cell integer NOT NULL
+);
+<% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
+  <% if (locals.heatmap) { %>
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_index ON <%=name%>_z<%=i%>(pos, cell, htime, <%= searchColumns.join(',') %>);
+  <% } else {%>
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_index ON <%=name%>_z<%=i%>(pos, cell, <%= searchColumns.join(',') %>);
+  <% } %>
+<% } else { %>
+  <% if (locals.heatmap) { %>
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_index ON <%=name%>_z<%=i%>(pos, cell, htime %>);
+  <% } else {%>
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_index ON <%=name%>_z<%=i%>(pos, cell %>);
+  <% } %>
+<% }%>
+<% }%>
+
