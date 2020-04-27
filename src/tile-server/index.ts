@@ -8,7 +8,7 @@ import * as Compress from 'koa-compress';
 
 import mvtRouter from './routers/mvt.router';
 
-export async function start(...args) {
+export async function start(args) {
   const app = new Koa();
   if (process.env.NODE_ENV !== 'pro') {
     app.use(Logger());

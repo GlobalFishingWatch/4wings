@@ -13,15 +13,16 @@ async function init() {
   let module: any;
   if (configArgs.import) {
     module = await import('./importer/index');
-    module.start(configArgs);
+    await module.start(configArgs);
   } else if (configArgs['tile-server']) {
     module = await import('./tile-server/index');
-    module.start(configArgs);
+    await module.start(configArgs);
   } else if (configArgs['generate-tiles']) {
     module = await import('./generate-tiles/index');
-    module.start(configArgs);
+    await module.start(configArgs);
   } else {
     showHelp();
+    process.exit(1);
   }
 }
 
