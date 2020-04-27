@@ -30,7 +30,7 @@ export async function run(url, date, period, token?) {
     const writerClass = (await import(`../writers/${options.target.type}`))
       .default;
     writer = new writerClass(options);
-    await writer.init(options);
+    await writer.init();
   } catch (err) {
     logger.error('Error initializing writer', err);
     throw err;

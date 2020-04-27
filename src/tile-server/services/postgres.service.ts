@@ -1,8 +1,8 @@
 import * as pg from 'pg';
 import { logger } from 'logger';
 
-var types = pg.types;
-types.setTypeParser(1114, function (stringValue) {
+const types = pg.types;
+types.setTypeParser(1114, (stringValue) => {
   return stringValue;
 });
 
@@ -21,7 +21,7 @@ export class PostgresService {
     try {
       client = await pool.connect();
       const res = await pool.query(
-        `select id, config, to_json(start_date) as start_date, to_json(end_date) as end_date from datasets where id=$1`,
+        'select id, config, to_json(start_date) as start_date, to_json(end_date) as end_date from datasets where id=$1',
         [id],
       );
       if (!res || !res.rows || res.rows.length === 0) {

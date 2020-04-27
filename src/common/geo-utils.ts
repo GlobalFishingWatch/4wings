@@ -34,8 +34,8 @@ export function getPoint(cell, x, y, zoom, numCellsLat, numCellsLon) {
 
   const deltaLat = (bounds.maxLat - bounds.minLat) / numCellsLat;
   const deltaLon = (bounds.maxLon - bounds.minLon) / numCellsLon;
-  let lat = bounds.minLat + y1 * deltaLat;
-  let lon = bounds.minLon + x1 * deltaLon;
+  const lat = bounds.minLat + y1 * deltaLat;
+  const lon = bounds.minLon + x1 * deltaLon;
 
   return { lat, lon };
 }
@@ -44,7 +44,7 @@ export function getCellDiffProj(cell, origNumCells, newNumCells) {
   if (origNumCells === newNumCells) {
     return cell;
   }
-  let difference = origNumCells / newNumCells;
+  const difference = origNumCells / newNumCells;
 
   const x1 = cell % origNumCells;
   const y1 = Math.floor(cell / origNumCells);

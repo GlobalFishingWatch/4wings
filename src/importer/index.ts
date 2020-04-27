@@ -3,7 +3,7 @@ import { run } from './core/orchestrator';
 function printUsage() {
   console.log(`
 Import command:
-  Required arguments: 
+  Required arguments:
   --url=<Url of the config file>
   --date=<Date to execute>
   --period=<Period to import the data (daily, monthly, yearly)>

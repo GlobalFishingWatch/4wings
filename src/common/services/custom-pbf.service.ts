@@ -20,7 +20,7 @@ export async function generateCustomPBF(
       delete el.lat;
       delete el.lon;
       if (!ctxState.temporalAggregation) {
-        const htimes = Object.keys(el).map((h) => parseInt(h));
+        const htimes = Object.keys(el).map((h) => parseInt(h, 10));
         const max = Math.max(...htimes);
         const min = Math.min(...htimes);
 
@@ -119,7 +119,7 @@ export async function generateCustomPBF(
     }
   }
   const proto = await protobuf.load(`${__dirname}/../proto/tile.proto`);
-  const protoTile = proto.lookupType(`tile.Tile`);
+  const protoTile = proto.lookupType('tile.Tile');
   const pbf = protoTile.encode(protoTile.create({ data })).finish();
 
   // const compressed = await new Promise((resolve, reject) => {

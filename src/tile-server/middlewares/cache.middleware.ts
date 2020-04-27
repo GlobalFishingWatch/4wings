@@ -37,12 +37,12 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     await next();
     return;
   }
-  let bucket = dataset.cache.bucket;
+  const bucket = dataset.cache.bucket;
   const cacheValues = dataset[ctx.params.type];
   if (
     cacheValues.cache &&
-    parseInt(ctx.params.z) >= cacheValues.fromLevelCache &&
-    parseInt(ctx.params.z) <= cacheValues.toLevelCache
+    parseInt(ctx.params.z, 10) >= cacheValues.fromLevelCache &&
+    parseInt(ctx.params.z, 10) <= cacheValues.toLevelCache
   ) {
     let name = ctx.params.type;
     if (ctx.params.type === 'heatmap' && ctx.query.format === 'intArray') {

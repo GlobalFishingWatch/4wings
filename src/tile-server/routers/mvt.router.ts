@@ -127,9 +127,9 @@ class MVTRouter {
 
   static async getTile(ctx: Koa.ParameterizedContext) {
     const coords = {
-      z: parseInt(ctx.params.z),
-      x: parseInt(ctx.params.x),
-      y: parseInt(ctx.params.y),
+      z: parseInt(ctx.params.z, 10),
+      x: parseInt(ctx.params.x, 10),
+      y: parseInt(ctx.params.y, 10),
     };
     const query = await TileService.generateQuery(
       coords,
@@ -177,7 +177,7 @@ class MVTRouter {
       if (ctx.state.mode) {
         ctx.set('columns', `count,${ctx.state.mode}`);
       } else {
-        ctx.set('columns', `count`);
+        ctx.set('columns', 'count');
       }
       const compressed = await new Promise((resolve, reject) => {
         zlib.gzip(buff, (err, data) => {
