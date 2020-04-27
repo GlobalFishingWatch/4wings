@@ -1,0 +1,57 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
+        '.',
+      ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'tag',
+        '-t',
+        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
+        '.',
+      ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'tag',
+        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
+        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:latest',
+      ]
+  # Deploy to the appropriate environment
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      [
+        'beta',
+        'run',
+        'deploy',
+        '$_RUN_SERVICE_NAME',
+        '--project',
+        '$_RUN_PROJECT',
+        '--image',
+        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
+        '--region',
+        '$_RUN_REGION',
+        '--platform',
+        'managed',
+        '--args',
+        'tile-server',
+        '--allow-unauthenticated',
+        '--set-env-vars',
+        'DB_USER=$_DB_USER,DB_PASS=$_DB_PASS,DB_HOST=$_DB_HOST,DB_NAME=$_DB_NAME,DB_NAME=$_DB_NAME',
+      ]
+
+images:
+  - 'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA'
+  - 'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:latest'
