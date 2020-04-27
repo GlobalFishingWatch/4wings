@@ -26,4 +26,9 @@ async function init() {
   }
 }
 
-init().catch(console.error);
+init()
+  .then(() => {
+    console.log('Process executed successfully');
+    process.exit(0);
+  })
+  .catch(console.error);

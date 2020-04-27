@@ -44,9 +44,7 @@ export async function run(url: string, token: string) {
   });
 
   logger.debug('Obtaining options');
-  console.log(url);
   const options: any = await getOptions(url, token);
-  console.log(options);
 
   await removeGCSDir(options);
 
