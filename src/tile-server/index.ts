@@ -1,10 +1,11 @@
+import { PostgresService } from './services/postgres.service';
 import * as Koa from 'koa';
 import * as Logger from 'koa-logger';
 import * as Mount from 'koa-mount';
 import * as Helmet from 'koa-helmet';
 import * as Cors from '@koa/cors';
-import * as Static from 'koa-static';
 import * as Compress from 'koa-compress';
+import * as Views from 'koa-views';
 
 import mvtRouter from './routers/mvt.router';
 
@@ -13,7 +14,20 @@ export async function start(args) {
   if (process.env.NODE_ENV !== 'pro') {
     app.use(Logger());
   }
-  app.use(Mount('/map', Static(`${__dirname}/html`)));
+  app.use(
+    Views(__dirname + '/html', {
+      map: {
+        html: 'ejs',
+      },
+    }),
+  );
+
+  app.use(
+    Mount('/map', async (ctx) => {
+      const ids = await PostgresService.getAllDatasetIds();
+      await ctx.render('index', { ids });
+    }),
+  );
   app.use(Cors());
   app.use(Helmet());
   app.use(

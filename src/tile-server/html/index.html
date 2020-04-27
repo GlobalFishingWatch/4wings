@@ -63,11 +63,9 @@
       <h3>Select a layer:</h3>
       <select id="layers">
         <option></option>
-        <option
-          value="ra_carriers-heatmap?filters=timestamp >= '2017-01-01T00:00:00' AND timestamp <= '2019-12-31T00:00:00'"
-          >Test - Heatmap</option
-        >
-        <option value="ra_carriers-position">Test - position</option>
+        <% for (let i = 0; i < ids.length; i++) { %>
+        <option value="<%=ids[i]%>-heatmap"><%=ids[i]%> - heatmap</option>
+        <% } %>
       </select>
     </div>
     <button id="button">Play</button>

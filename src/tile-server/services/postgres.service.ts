@@ -41,4 +41,20 @@ export class PostgresService {
       }
     }
   }
+  static async getAllDatasetIds() {
+    logger.debug('Obtaining datasets');
+    let client;
+    try {
+      client = await pool.connect();
+      const res = await pool.query('select id from datasets');
+      return res.rows.map((r) => r.id);
+    } catch (err) {
+      logger.error('Error connecting', err);
+      throw new Error('Internal server error');
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
 }

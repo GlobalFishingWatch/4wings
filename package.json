@@ -38,7 +38,7 @@
     "koa-helmet": "^5.2.0",
     "koa-logger": "^3.2.1",
     "koa-mount": "^4.0.0",
-    "koa-static": "^5.0.0",
+    "koa-views": "^6.2.1",
     "pbf": "^3.2.1",
     "pg": "^8.0.2",
     "pg-copy-streams": "^2.2.2",
