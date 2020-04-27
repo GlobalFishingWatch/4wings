@@ -7,7 +7,7 @@ With this app, you can import your data (from different sources) into your datab
 The importer is divided in 3 steps:
 
 - Reader
-- Parser
+- Core
 - Writer
 
 ![Schema](../../doc/img/import.png)
