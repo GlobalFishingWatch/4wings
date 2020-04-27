@@ -43,7 +43,7 @@ steps:
         '$_CLOUDSQL_INSTANCE',
         '--allow-unauthenticated',
         '--set-env-vars',
-        'DB_USER=$_DB_USER,DB_PASS=$_DB_PASS,DB_HOST=$_DB_HOST,DB_NAME=$_DB_NAME',
+        'DB_USER=$_DB_USER,DB_PASS=$_DB_PASS,DB_HOST=$_DB_HOST,DB_NAME=$_DB_NAME,NODE_ENV=$_NODE_ENV',
       ]
 
 images:
