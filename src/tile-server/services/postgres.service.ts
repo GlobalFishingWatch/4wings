@@ -7,11 +7,11 @@ types.setTypeParser(1114, function (stringValue) {
 });
 
 const pool = new pg.Pool({
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASS || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'postgres',
-  port: process.env.DB_PORT || 5432,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 });
 
 export class PostgresService {
