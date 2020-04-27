@@ -10,14 +10,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       [
-        'tag',
-        '-t',
-        'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
-        '.',
-      ]
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
         'push',
         'gcr.io/world-fishing-827/github.com/globalfishingwatch/4wings:$COMMIT_SHA',
       ]
@@ -47,9 +39,11 @@ steps:
         'managed',
         '--args',
         'tile-server',
+        '--add-cloudsql-instances',
+        '$_CLOUDSQL_INSTANCE',
         '--allow-unauthenticated',
         '--set-env-vars',
-        'DB_USER=$_DB_USER,DB_PASS=$_DB_PASS,DB_HOST=$_DB_HOST,DB_NAME=$_DB_NAME,DB_NAME=$_DB_NAME',
+        'DB_USER=$_DB_USER,DB_PASS=$_DB_PASS,DB_HOST=$_DB_HOST,DB_NAME=$_DB_NAME',
       ]
 
 images:
