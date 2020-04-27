@@ -14,12 +14,14 @@ async function init() {
   if (configArgs.import) {
     module = await import('./importer/index');
     await module.start(configArgs);
+    process.exit(0);
   } else if (configArgs['tile-server']) {
     module = await import('./tile-server/index');
     await module.start(configArgs);
   } else if (configArgs['generate-tiles']) {
     module = await import('./generate-tiles/index');
     await module.start(configArgs);
+    process.exit(0);
   } else {
     showHelp();
     process.exit(1);
@@ -29,6 +31,8 @@ async function init() {
 init()
   .then(() => {
     console.log('Process executed successfully');
-    process.exit(0);
   })
-  .catch(console.error);
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
