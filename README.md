@@ -1,6 +1,13 @@
 # 4wings
 
-4wings is compose for 3 apps:
+4wings is the name of <a href="https://globalfishingwatch.org/">GlobalFishingWatch's</a> strategy to present **spatiotemporal datasets**.
+
+The **client-side** aspect of 4wings consists of:
+
+- a custom fork of <a href="https://github.com/GlobalFishingWatch/mapbox-gl-js">Mapbox GL JS</a> (and <a href="https://github.com/GlobalFishingWatch/react-map-gl/">react-map-gl</a>, its React bindings)
+- <a href="https://github.com/GlobalFishingWatch/layer-composer/">layer-composer</a>, a tool to prepare a Mapbox GL JSON style</a> 
+
+This repository contains the **back-end components** of 4wings, made of 3 apps:
 
 - Importer: Import the data, convert and write in a database. [More info](./src/importer/README.md)
 - Tile Server: Generate and serve the tiles in real time. [More info](./src/tile-server/README.md)
