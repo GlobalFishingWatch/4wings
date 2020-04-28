@@ -1,6 +1,23 @@
 # 4wings
 
-4wings is the name of <a href="https://globalfishingwatch.org/">GlobalFishingWatch's</a> strategy to present **spatiotemporal datasets**.
+4wings is the name of <a href="https://globalfishingwatch.org/">GlobalFishingWatch's</a> strategy to present big **spatiotemporal datasets**.
+
+GFW's datasets can be very large (mapping about 65000 fishing vessels activity with tracks in the 100 000s of points), and they need to be explorable by the user in an efficient manner. This creates a number of challenges, from ingestion, to tile caching, efficient rendering and animation, etc.
+
+The objective is to show fishing activity around the globe considering:
+
+- Performance: fast API response times, caching, no UI lock, GPU rendering
+- Precision: from yearly to hourly view, from world view to city-scale (z level 12)
+- Completeness: XYZ coords, time properties, as well as any useful metadata: fishing activity, fishing events (encounters at sea, etc), flags, gear types, etc from multiples vessel activity sources of data (AIS, VMS, SAR, etc), and other datasets (sea temp., bathymetry, salinity, animal telemetry, etc)
+
+The data model consists in presenting spatiotemporal dataset in a gridded format:
+
+- which resolution per tile can vary depending on the part of the world (to maintain a stable cell real coverage at a given zoom level) and the zoom level (resolution gets higher at higher zoom levels as a less dense grid allows it)
+- where each cell contains data for a given span of time, in a time resolution variable depending on the tile time span
+- presentend by the API as Protobuffers containing an integer array 
+- converted on the fly by a custom Mapbox GL Source implementation to an MVT tile
+- optionally aggregated on the fly for animation purposes
+- rendered by the GPU
 
 The **client-side** aspect of 4wings consists of:
 
