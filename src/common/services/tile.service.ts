@@ -49,9 +49,7 @@ export class TileService {
     where pos = ${parseInt(pos, 10)}
     ${
       filters
-        ? `and ${filters.columns
-            .map((c) => `${c.column} ${c.comparator} ${c.value}`)
-            .join(` ${filters.union} `)}`
+        ? `and ${filters}`
         : ''
     }
     group by 1${!temporalAggregation ? ',2' : ''}`;
@@ -62,9 +60,7 @@ export class TileService {
     where pos = ${parseInt(pos, 10)}
     ${
       filters
-        ? `and ${filters.columns
-            .map((c) => `${c.column} ${c.comparator} ${c.value}`)
-            .join(` ${filters.union} `)}`
+        ? `and ${filters}`
         : ''
     }`;
       }

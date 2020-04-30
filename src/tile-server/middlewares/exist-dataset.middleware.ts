@@ -1,55 +1,40 @@
 import { PostgresService } from './../services/postgres.service';
+import * as SqlWhereParser from 'sql-where-parser';
 
-function parseFilter(value) {
-  const parts = value.split(/<=|<|>=|>|!=|==| IN | in /);
-  if (parts.length === 1) {
-    throw new Error('Error filter without value');
-  }
-  const column: any = {
-    column: parts[0].trim(),
-    value: parts[1].trim(),
-  };
-  if (value.indexOf('>=') >= 0) {
-    column.comparator = '>=';
-  } else if (value.indexOf('<=') >= 0) {
-    column.comparator = '<=';
-  } else if (value.indexOf('<') >= 0) {
-    column.comparator = '<';
-  } else if (value.indexOf('>') >= 0) {
-    column.comparator = '>';
-  } else if (value.indexOf('==') >= 0) {
-    column.comparator = '=';
-  } else if (value.indexOf('!=') >= 0) {
-    column.comparator = '<>';
-  } else if (value.toLowerCase().indexOf('in') >= 0) {
-    column.comparator = 'IN';
+const parser = new SqlWhereParser();
+
+
+function checkFilterFieldsInDataset(dataset, filters) {
+  if (Array.isArray(filters)) {
+    filters.forEach(filter => checkFilterFieldsInDataset(dataset, filter));
   } else {
-    return null;
+    Object.keys(filters).forEach((k) => {
+      if (k.toLowerCase() === 'and' || k.toLowerCase() === 'or') {
+        checkFilterFieldsInDataset(dataset, filters[k]);
+      } else if (Array.isArray(filters[k])) {
+        // check column
+        if (!filters[k].some((c) => (dataset.searchColumns.indexOf(c) >= 0) || ['timestamp', 'lat', 'lon', 'htime'].indexOf(c) >= 0)) {
+          throw new Error(
+            `Some column of ${filters[k]} is not supported to search. Supported columns: ${dataset.searchColumns}`,
+          );
+        }
+      } else {
+        // its a part of the and/or
+        checkFilterFieldsInDataset(dataset, filters[k]);
+      }
+    });
   }
-  return column;
-}
-
-function parseFiltersQuery(dataset, queryFilter) {
-  const filters = queryFilter.split(/ and | or | AND | OR /);
-  // check if the keys are part of the searchColumns in the dataset
-  const columns = filters
-    .map(parseFilter)
-    .filter(
-      (c) =>
-        dataset.searchColumns.indexOf(c.column) >= 0 ||
-        ['timestamp', 'lat', 'lon', 'pos', 'htime'].indexOf(c.column) >= 0,
-    );
-  return {
-    columns,
-    union:
-      queryFilter.indexOf(' and ') >= 0 || queryFilter.indexOf(' AND ') >= 0
-        ? 'and'
-        : 'or',
-  };
 }
 
 export async function existDataset(ctx, next) {
   const datasets = ctx.params.dataset.split(',');
+  try {
+    if (ctx.query.filters && ctx.query.filters.trim()) {
+      ctx.state.filters = parser.parse(ctx.query.filters);
+    }
+  } catch(err) {
+    ctx.throw(400, 'Incorrect filters');
+  }
 
   ctx.state.dataset = await Promise.all(
     datasets.map(async (d) => {
@@ -58,11 +43,14 @@ export async function existDataset(ctx, next) {
         ctx.throw(404, 'Dataset not found');
         return;
       }
-      if (ctx.query.filters) {
+      if (ctx.state.filters) {
         try {
-          ctx.state.filters = parseFiltersQuery(dataset, ctx.query.filters);
+          checkFilterFieldsInDataset(
+            dataset,
+            ctx.state.filters,
+          );
         } catch (err) {
-          ctx.throw(400, 'Incorrect filters');
+          ctx.throw(400, err.message);
           return;
         }
       }

@@ -20,12 +20,17 @@ export class PostgresService {
     let client;
     try {
       client = await pool.connect();
+    } catch (err) {
+      logger.error('Error connecting', err);
+      throw new Error('Internal server error');
+    }
+    try {
       const res = await pool.query(
         'select id, config, to_json(start_date) as start_date, to_json(end_date) as end_date from datasets where id=$1',
         [id],
       );
       if (!res || !res.rows || res.rows.length === 0) {
-        throw new Error('Dataset not found');
+        return null
       }
       return {
         ...res.rows[0].config,
@@ -34,7 +39,7 @@ export class PostgresService {
       };
     } catch (err) {
       logger.error('Error connecting', err);
-      throw new Error('Internal server error');
+      throw new Error(err.message);
     } finally {
       if (client) {
         client.release();

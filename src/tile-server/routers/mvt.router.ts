@@ -51,13 +51,7 @@ class MVTRouter {
         .map((h) => `count(${h.column}) as count`)
         .join(',')}
       from ${d.name}_z${zoom}
-      ${
-        ctx.state.filters
-          ? `WHERE ${ctx.state.filters.columns
-              .map((c) => `${c.column} ${c.comparator} ${c.value}`)
-              .join(` ${ctx.state.filters.union} `)}`
-          : ''
-      }
+      ${ctx.query.filters ? `WHERE ${ctx.query.filters}` : ''}
       group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub
       `;
 
@@ -135,7 +129,7 @@ class MVTRouter {
       coords,
       ctx.state.dataset,
       ctx.params.type,
-      ctx.state.filters,
+      ctx.query.filters,
       ctx.state.temporalAggregation,
       ctx.state.mode,
     );
