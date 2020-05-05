@@ -156,7 +156,7 @@ class MVTRouter {
         throw err;
       } finally {
         if (client) {
-          client.realease();
+          client.release();
         }
       }
     });
