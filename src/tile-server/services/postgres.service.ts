@@ -12,6 +12,7 @@ const pool = new pg.Pool({
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
+  max: 40,
 });
 
 export class PostgresService {
@@ -23,6 +24,10 @@ export class PostgresService {
     } catch (err) {
       logger.error('Error connecting', err);
       throw new Error('Internal server error');
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
     try {
       const res = await pool.query(
