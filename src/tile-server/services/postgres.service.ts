@@ -24,10 +24,6 @@ export class PostgresService {
     } catch (err) {
       logger.error('Error connecting', err);
       throw new Error('Internal server error');
-    } finally {
-      if (client) {
-        client.release();
-      }
     }
     try {
       const res = await pool.query(
