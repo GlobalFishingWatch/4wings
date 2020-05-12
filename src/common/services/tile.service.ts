@@ -1,4 +1,3 @@
-import * as Koa from 'koa';
 import { tile2Num, boundsFromTile, getPoint } from 'common/geo-utils';
 import * as GeoJSON from 'geojson';
 import * as vtpbf from 'vt-pbf';
@@ -37,23 +36,20 @@ export class TileService {
       const type = dataset[typeTile];
       if (typeTile === 'heatmap') {
         query = `
-    select cell ${!temporalAggregation ? ',htime' : ''} 
+    select cell ${!temporalAggregation ? ',htime' : ''}
     ${mode ? `,mode() WITHIN GROUP (ORDER BY ${mode}) as mode_${mode},` : ''}
      ${
        type.columns.length > 0
-         ? ',' +
-           type.columns
+         ? `,${type.columns
              .map((h) => `${h.func}(${h.column}) as ${h.alias}`)
-             .join(',')
+             .join(',')}`
          : ''
      }
     from ${dataset.name}_z${coords.z}
-    where pos = ${parseInt(pos)}
+    where pos = ${parseInt(pos, 10)}
     ${
       filters
-        ? `and ${filters.columns
-            .map((c) => `${c.column} ${c.comparator} ${c.value}`)
-            .join(` ${filters.union} `)}`
+        ? `and ${filters}`
         : ''
     }
     group by 1${!temporalAggregation ? ',2' : ''}`;
@@ -61,12 +57,10 @@ export class TileService {
         query = `
     select htime, lat, lon ${type.columns ? `, ${type.columns.join(',')}` : ''}
     from ${dataset.name}_z${coords.z}
-    where pos = ${parseInt(pos)}
+    where pos = ${parseInt(pos, 10)}
     ${
       filters
-        ? `and ${filters.columns
-            .map((c) => `${c.column} ${c.comparator} ${c.value}`)
-            .join(` ${filters.union} `)}`
+        ? `and ${filters}`
         : ''
     }`;
       }
@@ -82,23 +76,26 @@ export class TileService {
     format,
   ) {
     let cellsByZoom = datasets[0].cellsByZoom;
-    let numCellsLat, numCellsLon, deltaLat, deltaLon;
     const bounds = boundsFromTile(coords.z, coords.x, coords.y);
 
     cellsByZoom = cellsByZoom.map((v) => Math.sqrt(v) / 111320);
 
-    let cellSizeLat = cellsByZoom[coords.z];
-    let cellSizeLon = cellsByZoom[coords.z];
-    numCellsLat = Math.ceil((bounds.maxLat - bounds.minLat) / cellSizeLat);
-    numCellsLon = Math.ceil((bounds.maxLon - bounds.minLon) / cellSizeLon);
-    deltaLat = (bounds.maxLat - bounds.minLat) / numCellsLat;
-    deltaLon = (bounds.maxLon - bounds.minLon) / numCellsLon;
+    const cellSizeLat = cellsByZoom[coords.z];
+    const cellSizeLon = cellsByZoom[coords.z];
+    const numCellsLat = Math.ceil(
+      (bounds.maxLat - bounds.minLat) / cellSizeLat,
+    );
+    const numCellsLon = Math.ceil(
+      (bounds.maxLon - bounds.minLon) / cellSizeLon,
+    );
+    const deltaLat = (bounds.maxLat - bounds.minLat) / numCellsLat;
+    const deltaLon = (bounds.maxLon - bounds.minLon) / numCellsLon;
 
     let results = new Array(numCellsLat * numCellsLon);
 
     data.forEach((d, index) => {
       d.rows.forEach((row) => {
-        let cell = row.cell;
+        const cell = row.cell;
         if (!results[cell]) {
           const { lat, lon } = getPoint(
             cell,
@@ -112,7 +109,7 @@ export class TileService {
           results[cell] = {
             lat,
             lon,
-            cell: cell,
+            cell,
           };
         }
         if (!isNaN(row.count)) {
@@ -183,13 +180,9 @@ export class TileService {
         indexMaxPoints: 512 * 512,
         // extent: numCells * numCells,
       });
-      const tile = tileindex.getTile(
-        parseInt(coords.z),
-        parseInt(coords.x),
-        parseInt(coords.y),
-      );
+      const tile = tileindex.getTile(coords.z, coords.x, coords.y);
       if (!tile) {
-        //console.log('no tile');
+        // console.log('no tile');
         return;
       }
       const layer = datasets.map((d) => d.name).join(',');
@@ -199,16 +192,12 @@ export class TileService {
   }
 
   static generatePositionTile(results: any[], dataset: any, coords) {
-    let geojson = GeoJSON.parse(results, { Point: ['lat', 'lon'] });
+    const geojson = GeoJSON.parse(results, { Point: ['lat', 'lon'] });
 
     const tileindex = geojsonVt(geojson, {
       indexMaxPoints: 512 * 512,
     });
-    const tile = tileindex.getTile(
-      parseInt(coords.z),
-      parseInt(coords.x),
-      parseInt(coords.y),
-    );
+    const tile = tileindex.getTile(coords.z, coords.x, coords.y);
     if (!tile) {
       return;
     }

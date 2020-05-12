@@ -34,12 +34,12 @@ export default class BigQueryReader implements Reader {
   }
 
   async renderQuery() {
-    var view = {
-      date: this.date,
-      period: this.period,
-      formatDate: function (date, format) {
+    const view = {
+      formatDate(date, format) {
         return dateformat(date, format);
       },
+      date: this.date,
+      period: this.period,
     };
     return ejs.render(this.options.source.query, view);
   }

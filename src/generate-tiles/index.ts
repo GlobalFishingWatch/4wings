@@ -3,7 +3,7 @@ import { run } from './core/orchestrator';
 function printUsage() {
   console.log(`
 Import command:
-  Required arguments: 
+  Required arguments:
   --url=<Url of the config file>
   Optional arguments:
   --token=<Auth token to obtain the config file> (optional)

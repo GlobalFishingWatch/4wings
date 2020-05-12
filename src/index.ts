@@ -13,16 +13,26 @@ async function init() {
   let module: any;
   if (configArgs.import) {
     module = await import('./importer/index');
-    module.start(configArgs);
+    await module.start(configArgs);
+    process.exit(0);
   } else if (configArgs['tile-server']) {
     module = await import('./tile-server/index');
-    module.start(configArgs);
+    await module.start(configArgs);
   } else if (configArgs['generate-tiles']) {
     module = await import('./generate-tiles/index');
-    module.start(configArgs);
+    await module.start(configArgs);
+    process.exit(0);
   } else {
     showHelp();
+    process.exit(1);
   }
 }
 
-init().catch(console.error);
+init()
+  .then(() => {
+    console.log('Process executed successfully');
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

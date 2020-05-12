@@ -4,6 +4,9 @@
   "rules": {
     "ter-arrow-parens": [false],
     "no-increment-decrement": [false],
-    "function-name": [false]
+    "function-name": [false],
+    "prefer-array-literal": [false],
+    "no-else-after-return": [false],
+    "align": [true]
   }
 }

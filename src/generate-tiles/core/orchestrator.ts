@@ -5,11 +5,12 @@ import { Storage } from '@google-cloud/storage';
 
 function generateTilesOfLevel(from: number, to: number) {
   const total = [];
+  let initial = from;
   if (from <= 0) {
-    from = 0;
+    initial = 0;
   }
 
-  for (let i = from; i <= to; i++) {
+  for (let i = initial; i <= to; i++) {
     for (let x = 0; x < Math.pow(2, i); x++) {
       for (let y = 0; y < Math.pow(2, i); y++) {
         total.push({
@@ -43,9 +44,7 @@ export async function run(url: string, token: string) {
   });
 
   logger.debug('Obtaining options');
-  console.log(url);
   const options: any = await getOptions(url, token);
-  console.log(options);
 
   await removeGCSDir(options);
 

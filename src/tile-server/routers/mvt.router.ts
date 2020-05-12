@@ -14,19 +14,19 @@ const router = new Router({
 
 const pools = {};
 
-function getPoolByDataset(dataset) {
+async function getClientByDataset(dataset) {
   if (!pools[dataset.name]) {
     logger.debug(`New pool for ${dataset.name}`);
     const connection: any = {
       user: dataset.target.database.user,
       database: dataset.target.database.database,
       password: dataset.target.database.password,
-      max: 20,
+      max: 40,
     };
     if (process.env.NODE_ENV === 'dev') {
       connection.host = 'localhost';
     } else if (dataset.target.type === 'cloudsql') {
-      connection.host = `/cloudsql/${dataset.target.database.projectId}-${dataset.target.database.region}-${dataset.target.database.instanceId}`;
+      connection.host = `/cloudsql/${dataset.target.database.projectId}:${dataset.target.database.region}:${dataset.target.database.instanceId}`;
     } else {
       connection.host = dataset.target.database.host;
     }
@@ -35,7 +35,8 @@ function getPoolByDataset(dataset) {
     }
     pools[dataset.name] = new Pool(connection);
   }
-  return pools[dataset.name];
+  
+  return await pools[dataset.name].connect();;
 }
 
 class MVTRouter {
@@ -51,30 +52,34 @@ class MVTRouter {
         .map((h) => `count(${h.column}) as count`)
         .join(',')}
       from ${d.name}_z${zoom}
-      ${
-        ctx.state.filters
-          ? `WHERE ${ctx.state.filters.columns
-              .map((c) => `${c.column} ${c.comparator} ${c.value}`)
-              .join(` ${ctx.state.filters.union} `)}`
-          : ''
-      }
+      ${ctx.query.filters ? `WHERE ${ctx.query.filters}` : ''}
       group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub
       `;
-
-      const data = await getPoolByDataset(d).query(statisticsQuery);
-      if (!data || !data.rows || data.rows.length === 0) {
-        console.log('Error obtaining statistics');
-        return { name: d.name, data: null };
+      let client;
+      try {
+        client = await getClientByDataset(d);
+        const data = await client.query(statisticsQuery);
+        if (!data || !data.rows || data.rows.length === 0) {
+          console.log('Error obtaining statistics');
+          return { name: d.name, data: null };
+        }
+        Object.keys(data.rows[0]).forEach(
+          (k) => (data.rows[0][k] = parseFloat(data.rows[0][k])),
+        );
+        return {
+          name: d.name,
+          data: data.rows[0],
+          startDate: d.startDate,
+          endDate: d.endDate,
+        };
+      } catch(err) {
+        logger.error('Error in statistics query', err);
+        throw err;
+      } finally {
+        if (client) {
+          client.release();
+        }
       }
-      Object.keys(data.rows[0]).forEach(
-        (k) => (data.rows[0][k] = parseFloat(data.rows[0][k])),
-      );
-      return {
-        name: d.name,
-        data: data.rows[0],
-        startDate: d.startDate,
-        endDate: d.endDate,
-      };
     });
     try {
       const data: any = await Promise.all(queries);
@@ -127,21 +132,33 @@ class MVTRouter {
 
   static async getTile(ctx: Koa.ParameterizedContext) {
     const coords = {
-      z: parseInt(ctx.params.z),
-      x: parseInt(ctx.params.x),
-      y: parseInt(ctx.params.y),
+      z: parseInt(ctx.params.z, 10),
+      x: parseInt(ctx.params.x, 10),
+      y: parseInt(ctx.params.y, 10),
     };
     const query = await TileService.generateQuery(
       coords,
       ctx.state.dataset,
       ctx.params.type,
-      ctx.state.filters,
+      ctx.query.filters,
       ctx.state.temporalAggregation,
       ctx.state.mode,
     );
 
-    const promises = ctx.state.dataset.map((d, i) => {
-      return getPoolByDataset(d).query(query[i]);
+    const promises = ctx.state.dataset.map(async (d, i) => {
+      let client;
+      try {
+        client = await getClientByDataset(d);
+        const data = await client.query(query[i]);
+        return data;
+      } catch(err){
+        console.error('Error', err);
+        throw err;
+      } finally {
+        if (client) {
+          client.release();
+        }
+      }
     });
     const data: any = await Promise.all(promises);
     if (data.every((d: any) => !d.rows || d.rows.length === 0)) {
@@ -177,7 +194,7 @@ class MVTRouter {
       if (ctx.state.mode) {
         ctx.set('columns', `count,${ctx.state.mode}`);
       } else {
-        ctx.set('columns', `count`);
+        ctx.set('columns', 'count');
       }
       const compressed = await new Promise((resolve, reject) => {
         zlib.gzip(buff, (err, data) => {

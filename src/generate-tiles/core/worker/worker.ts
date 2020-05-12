@@ -21,7 +21,7 @@ function getPool(dataset) {
     if (process.env.NODE_ENV === 'dev') {
       connection.host = 'localhost';
     } else if (dataset.target.type === 'cloudsql') {
-      connection.host = `/cloudsql/${dataset.target.database.projectId}-${dataset.target.database.region}-${dataset.target.database.instanceId}`;
+      connection.host = `${dataset.target.database.projectId}-${dataset.target.database.region}-${dataset.target.database.instanceId}`;
     } else {
       connection.host = dataset.target.database.host;
     }
