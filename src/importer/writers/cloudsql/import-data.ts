@@ -13,7 +13,7 @@ async function importFile(
   table,
   columns,
 ) {
-  logger.debug(`Importing file ${file}`);
+  logger.debug(`Importing file ${file} with columns ${columns.join(',')}`);
   const auth = new GoogleAuth({
     scopes: 'https://www.googleapis.com/auth/cloud-platform',
   });
@@ -80,13 +80,6 @@ export async function importData(options) {
   const columns = ['lat', 'lon', 'pos', 'cell', 'timestamp'];
   if (options.heatmap) {
     columns.push('htime');
-  }
-  if (options.searchColumns) {
-    options.searchColumns.forEach((c) => {
-      if (columns.indexOf(c) === -1) {
-        columns.push(c);
-      }
-    });
   }
   if (options.target.extraColumns) {
     Object.keys(options.target.extraColumns).forEach((c) => {
