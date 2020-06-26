@@ -81,8 +81,8 @@ export async function importData(options) {
   if (options.heatmap) {
     columns.push('htime');
   }
-  if (options.target.extraColumns) {
-    Object.keys(options.target.extraColumns).forEach((c) => {
+  if (options.extraColumns) {
+    Object.keys(options.extraColumns).forEach((c) => {
       if (columns.indexOf(c) === -1) {
         columns.push(c);
       }
