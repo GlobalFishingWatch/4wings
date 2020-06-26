@@ -69,6 +69,8 @@ export default class CloudSQLWriter implements Writer {
         );
         client = await this.pool.connect();
         await client.query(tables);
+        client.release();
+        client = null;
       }
 
       logger.debug('Tables clustered successfully');
@@ -188,6 +190,8 @@ export default class CloudSQLWriter implements Writer {
         );
         client = await this.pool.connect();
         await client.query(tables);
+        client.release();
+        client = null;
       }
 
       logger.debug('Data delete successfully');
