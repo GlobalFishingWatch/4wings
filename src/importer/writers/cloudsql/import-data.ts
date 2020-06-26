@@ -82,7 +82,7 @@ export async function importData(options) {
     columns.push('htime');
   }
   if (options.extraColumns) {
-    Object.keys(options.extraColumns).forEach((c) => {
+    options.extraColumns.forEach((c) => {
       if (columns.indexOf(c) === -1) {
         columns.push(c);
       }
