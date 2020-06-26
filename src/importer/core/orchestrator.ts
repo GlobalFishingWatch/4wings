@@ -2,24 +2,24 @@ import { ConverterTransform } from './converter';
 import { LoggerTransform } from './logger';
 import { Reader } from 'importer/interfaces/reader';
 import { Writer } from 'importer/interfaces/writer';
-
+import * as objectAssignDeep from 'object-assign-deep';
 import { logger } from 'logger';
 import * as stream from 'stream';
 import { promisify } from 'util';
 import { getOptions } from 'common/utils';
 const pipeline = promisify(stream.pipeline);
 
-export async function run(url, date, period, token?) {
+export async function run(url, date, period, token, overrideConfig) {
   logger.debug('Obtaining options');
-  const options: any = await getOptions(url, token);
-
+  let config: any = await getOptions(url, token);
+  config = objectAssignDeep(config, overrideConfig);
   let reader: Reader;
   let writer: Writer;
   try {
     logger.debug('Initializing reader');
-    const readerClass = (await import(`../readers/${options.source.type}`))
+    const readerClass = (await import(`../readers/${config.source.type}`))
       .default;
-    reader = new readerClass(options, date, period);
+    reader = new readerClass(config, date, period);
     await reader.init();
   } catch (err) {
     logger.error('Error initializing reader', err);
@@ -27,9 +27,9 @@ export async function run(url, date, period, token?) {
   }
   try {
     logger.debug('Initializing writer');
-    const writerClass = (await import(`../writers/${options.target.type}`))
+    const writerClass = (await import(`../writers/${config.target.type}`))
       .default;
-    writer = new writerClass(options);
+    writer = new writerClass(config);
     await writer.init();
   } catch (err) {
     logger.error('Error initializing writer', err);
@@ -39,7 +39,7 @@ export async function run(url, date, period, token?) {
   const readStream = await reader.getReadStream();
   const writeStream = await writer.getWriteStream();
 
-  const converterTransform = new ConverterTransform(options);
+  const converterTransform = new ConverterTransform(config);
   const loggerTransform = new LoggerTransform();
   try {
     logger.debug('Executing pipeline');

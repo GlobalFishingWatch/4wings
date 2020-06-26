@@ -38,7 +38,7 @@ async function removeGCSDir(options) {
   logger.debug('Removed successfully');
 }
 
-export async function run(url: string, token: string) {
+export async function run(url: string, token: string, overrideConfig) {
   const pool = workerpool.pool(`${__dirname}/worker/worker.js`, {
     maxWorkers: 2,
   });

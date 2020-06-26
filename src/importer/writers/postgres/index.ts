@@ -48,6 +48,7 @@ export default class PostgresWriter implements Writer {
       `${__dirname}/templates/tables.ejs`,
       generationOptions,
     );
+    console.log(tables)
     await this.pool.query(tables);
     logger.debug('Tables created successfully');
   }

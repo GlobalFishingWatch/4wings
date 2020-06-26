@@ -9,7 +9,7 @@ import * as Views from 'koa-views';
 
 import mvtRouter from './routers/mvt.router';
 
-export async function start(args) {
+export async function start(args, overrideConfig) {
   const app = new Koa();
   if (process.env.NODE_ENV !== 'pro') {
     app.use(Logger());

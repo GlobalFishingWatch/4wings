@@ -60,12 +60,16 @@ export default class CloudSQLWriter implements Writer {
       const generationOptions = {
         ...this.options,
       };
-      const tables = await ejs.renderFile(
-        `${__dirname}/templates/cluster-index.ejs`,
-        generationOptions,
-      );
-      client = await this.pool.connect();
-      await client.query(tables);
+      for (let i = 0; i <= generationOptions.maxZoom; i++) {
+        logger.debug(`Creating cluster for ${i} level`);
+        generationOptions.level = i;
+        const tables = await ejs.renderFile(
+          `${__dirname}/templates/cluster-index.ejs`,
+          generationOptions,
+        );
+        client = await this.pool.connect();
+        await client.query(tables);
+      }
 
       logger.debug('Tables clustered successfully');
     } catch (err) {
@@ -161,8 +165,40 @@ export default class CloudSQLWriter implements Writer {
       }),
     );
     await this.uploadData();
+    if (this.options.target.clearBeforeInsert) {
+      await this.deleteData();
+    }
     await this.insertData();
     await this.clusterData();
+  }
+
+  async deleteData() {
+    let client;
+    try {
+      logger.debug('Deleting previous data');
+      const generationOptions = {
+        ...this.options,
+      };
+      for (let i = 0; i <= generationOptions.maxZoom; i++) {
+        logger.debug(`Deleting previous data for ${i} level`);
+        generationOptions.level = i;
+        const tables = await ejs.renderFile(
+          `${__dirname}/templates/delete-data.ejs`,
+          generationOptions,
+        );
+        client = await this.pool.connect();
+        await client.query(tables);
+      }
+
+      logger.debug('Data delete successfully');
+    } catch (err) {
+      logger.error('Error deleting data of tables', err);
+      throw err;
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
   }
 
   async updateMetadata(): Promise<void> {
