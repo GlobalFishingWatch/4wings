@@ -1,6 +1,5 @@
 import * as Koa from 'koa';
 
-
 function existTuple(filters, column, operator, value) {
   if (Array.isArray(filters)) {
     return filters.some((filter) => {
@@ -15,7 +14,7 @@ function existTuple(filters, column, operator, value) {
         const existColumn = filters[k].indexOf(column) >= 0;
         const existValue = filters[k].indexOf(value) >= 0;
         const isOperator = k === operator;
-        return existColumn && existValue && isOperator
+        return existColumn && existValue && isOperator;
       } else {
         // its a part of the and/or
         return existTuple(filters[k], column, operator, value);
@@ -28,14 +27,14 @@ function numFilters(filters) {
   let num = 0;
   if (Array.isArray(filters)) {
     filters.forEach((filter) => {
-      num += numFilters(filter)
+      num += numFilters(filter);
     });
   } else {
     Object.keys(filters).forEach((k) => {
       if (k.toLowerCase() === 'and' || k.toLowerCase() === 'or') {
-        num += numFilters(filters[k])
+        num += numFilters(filters[k]);
       } else if (Array.isArray(filters[k])) {
-        num++
+        num++;
       } else {
         // its a part of the and/or
         num += numFilters(filters[k]);
@@ -46,13 +45,18 @@ function numFilters(filters) {
 }
 
 function allDataFilters(dataset, filters) {
-  const checkStartDate = existTuple(filters, 'timestamp', '<=', dataset.endDate);
+  const checkStartDate = existTuple(
+    filters,
+    'timestamp',
+    '<=',
+    dataset.endDate,
+  );
   const checkEndDate = existTuple(
     filters,
     'timestamp',
     '>=',
     dataset.startDate,
-  );  
+  );
   return checkEndDate && checkStartDate && numFilters(filters) === 2;
 }
 
@@ -76,6 +80,9 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     return;
   }
   const bucket = dataset.cache.bucket;
+  // if (dataset.name === 'fishing_v3') {
+  //   dataset.heatmap.cache = true;
+  // }
   const cacheValues = dataset[ctx.params.type];
   if (
     cacheValues.cache &&

@@ -35,8 +35,8 @@ async function getClientByDataset(dataset) {
     }
     pools[dataset.name] = new Pool(connection);
   }
-  
-  return await pools[dataset.name].connect();;
+
+  return await pools[dataset.name].connect();
 }
 
 class MVTRouter {
@@ -49,12 +49,13 @@ class MVTRouter {
       const statisticsQuery = `
       select max(sub.count) as max, min(sub.count) as min, avg(sub.count) as avg, percentile_cont(0.5) within group (order by sub.count) as median  from (select ${type.columns
         .filter((h) => h.alias === 'count')
-        .map((h) => `count(${h.column}) as count`)
+        .map((h) => `${h.func}(${h.column}) as count`)
         .join(',')}
       from ${d.name}_z${zoom}
       ${ctx.query.filters ? `WHERE ${ctx.query.filters}` : ''}
       group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub
       `;
+
       let client;
       try {
         client = await getClientByDataset(d);
@@ -72,7 +73,7 @@ class MVTRouter {
           startDate: d.startDate,
           endDate: d.endDate,
         };
-      } catch(err) {
+      } catch (err) {
         logger.error('Error in statistics query', err);
         throw err;
       } finally {
@@ -151,7 +152,7 @@ class MVTRouter {
         client = await getClientByDataset(d);
         const data = await client.query(query[i]);
         return data;
-      } catch(err){
+      } catch (err) {
         console.error('Error', err);
         throw err;
       } finally {

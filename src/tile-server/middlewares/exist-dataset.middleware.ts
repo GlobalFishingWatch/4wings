@@ -3,17 +3,22 @@ import * as SqlWhereParser from 'sql-where-parser';
 
 const parser = new SqlWhereParser();
 
-
 function checkFilterFieldsInDataset(dataset, filters) {
-  if (Array.isArray(filters)) {
-    filters.forEach(filter => checkFilterFieldsInDataset(dataset, filter));
+  if (Array.isArray(filters)) {
+    filters.forEach((filter) => checkFilterFieldsInDataset(dataset, filter));
   } else {
     Object.keys(filters).forEach((k) => {
       if (k.toLowerCase() === 'and' || k.toLowerCase() === 'or') {
         checkFilterFieldsInDataset(dataset, filters[k]);
       } else if (Array.isArray(filters[k])) {
         // check column
-        if (!filters[k].some((c) => (dataset.searchColumns.indexOf(c) >= 0) || ['timestamp', 'lat', 'lon', 'htime'].indexOf(c) >= 0)) {
+        if (
+          !filters[k].some(
+            (c) =>
+              dataset.searchColumns.indexOf(c) >= 0 ||
+              ['timestamp', 'lat', 'lon', 'htime'].indexOf(c) >= 0,
+          )
+        ) {
           throw new Error(
             `Some column of ${filters[k]} is not supported to search. Supported columns: ${dataset.searchColumns}`,
           );
@@ -32,7 +37,7 @@ export async function existDataset(ctx, next) {
     if (ctx.query.filters && ctx.query.filters.trim()) {
       ctx.state.filters = parser.parse(ctx.query.filters);
     }
-  } catch(err) {
+  } catch (err) {
     ctx.throw(400, 'Incorrect filters');
   }
 
@@ -45,10 +50,7 @@ export async function existDataset(ctx, next) {
       }
       if (ctx.state.filters) {
         try {
-          checkFilterFieldsInDataset(
-            dataset,
-            ctx.state.filters,
-          );
+          checkFilterFieldsInDataset(dataset, ctx.state.filters);
         } catch (err) {
           ctx.throw(400, err.message);
           return;
@@ -60,13 +62,14 @@ export async function existDataset(ctx, next) {
         }
         ctx.state.mode = ctx.query.mode;
       }
-
-      if (ctx.query['temporal-aggregation'] === 'true') {
-        ctx.state.temporalAggregation = true;
-      } else {
-        ctx.state.temporalAggregation = false;
+      ctx.state.temporalAggregation = dataset.heatmap.temporalAggregation;
+      if (ctx.query['temporal-aggregation'] !== undefined) {
+        if (ctx.query['temporal-aggregation'] === 'true') {
+          ctx.state.temporalAggregation = true;
+        } else {
+          ctx.state.temporalAggregation = false;
+        }
       }
-
       return dataset;
     }),
   );
