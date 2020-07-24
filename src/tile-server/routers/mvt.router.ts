@@ -220,7 +220,7 @@ router.get(
   '/:dataset/tile/:type/:z/:x/:y',
   existDataset,
   existType,
-  // cache,
+  cache,
   MVTRouter.getTile,
 );
 
