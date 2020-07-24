@@ -62,6 +62,25 @@ export async function existDataset(ctx, next) {
         }
         ctx.state.mode = ctx.query.mode;
       }
+      if (ctx.query.interval) {
+        let interval = null;
+        if (ctx.query.interval === 'day') {
+          interval = 86400;
+        } else if (ctx.query.interval === '10days') {
+          interval = 86400 * 10;
+        } else if (ctx.query.interval === 'hour') {
+          interval = 3600;
+        } else {
+          ctx.throw(400, 'Interval selected not allowed');
+          return;
+        }
+
+        if (dataset.heatmap.time && dataset.heatmap.time > interval) {
+          ctx.throw(400, 'Interval selected lower than original');
+          return;
+        }
+        ctx.state.interval = interval;
+      }
       ctx.state.temporalAggregation = dataset.heatmap.temporalAggregation;
       if (ctx.query['temporal-aggregation'] !== undefined) {
         if (ctx.query['temporal-aggregation'] === 'true') {

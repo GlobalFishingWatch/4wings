@@ -68,7 +68,7 @@
         <% } %>
       </select>
       <select id="date">
-        <% for (let i = 15369; i < 15699; i++) { %>
+        <% for (let i = 15369; i < 15992; i++) { %>
         <option value="<%=i%>"><%=i%></option>
         <% } %>
       </select>
@@ -185,7 +185,7 @@
                 parts.slice(0, parts.length - 1).join('-') +
                 '/tile/' +
                 parts[1] +
-                `/{z}/{x}/{y}?${filters}`,
+                `/{z}/{x}/{y}?interval=day${filters}`,
             ],
           },
           'source-layer': parts[0],
@@ -304,7 +304,7 @@
               tiles: [
                 'https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt',
               ],
-              minzoom: 6,
+              minzoom: 14,
               maxzoom: 14,
             },
 

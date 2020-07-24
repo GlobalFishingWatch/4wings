@@ -47,22 +47,14 @@ export class TileService {
      }
     from ${dataset.name}_z${coords.z}
     where pos = ${parseInt(pos, 10)}
-    ${
-      filters
-        ? `and ${filters}`
-        : ''
-    }
+    ${filters ? `and ${filters}` : ''}
     group by 1${!temporalAggregation ? ',2' : ''}`;
       } else {
         query = `
     select htime, lat, lon ${type.columns ? `, ${type.columns.join(',')}` : ''}
     from ${dataset.name}_z${coords.z}
     where pos = ${parseInt(pos, 10)}
-    ${
-      filters
-        ? `and ${filters}`
-        : ''
-    }`;
+    ${filters ? `and ${filters}` : ''}`;
       }
       return query;
     });
@@ -74,6 +66,7 @@ export class TileService {
     data,
     ctxState,
     format,
+    interval = null,
   ) {
     let cellsByZoom = datasets[0].cellsByZoom;
     const bounds = boundsFromTile(coords.z, coords.x, coords.y);
@@ -94,6 +87,7 @@ export class TileService {
     let results = new Array(numCellsLat * numCellsLon);
 
     data.forEach((d, index) => {
+      let originalInterval = datasets[index].heatmap.time;
       d.rows.forEach((row) => {
         const cell = row.cell;
         if (!results[cell]) {
@@ -114,6 +108,9 @@ export class TileService {
         }
         if (!isNaN(row.count)) {
           row.count = parseFloat(row.count);
+        }
+        if (interval) {
+          row.htime = Math.floor((row.htime * originalInterval) / interval);
         }
         if (!ctxState.temporalAggregation) {
           if (!results[cell][row.htime]) {
@@ -153,6 +150,7 @@ export class TileService {
         }
       });
     });
+
     if (format === 'intArray') {
       return await generateCustomPBF(
         datasets,

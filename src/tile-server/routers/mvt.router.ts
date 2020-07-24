@@ -33,6 +33,7 @@ async function getClientByDataset(dataset) {
     if (dataset.target.database.port) {
       connection.port = dataset.target.database.port;
     }
+    connection.port = 5434;
     pools[dataset.name] = new Pool(connection);
   }
 
@@ -175,6 +176,7 @@ class MVTRouter {
         data,
         ctx.state,
         ctx.query.format,
+        ctx.state.interval,
       );
       ctx.set('datasets', ctx.state.dataset.map((d) => d.name).join(','));
     } else {
@@ -218,7 +220,7 @@ router.get(
   '/:dataset/tile/:type/:z/:x/:y',
   existDataset,
   existType,
-  cache,
+  // cache,
   MVTRouter.getTile,
 );
 
