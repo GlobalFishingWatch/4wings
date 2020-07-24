@@ -95,7 +95,9 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     }
     const url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
       dataset.cache.dir ? `/${dataset.cache.dir}` : ''
-    }/all/${name}-${ctx.params.z}-${ctx.params.x}-${ctx.params.y}.pbf`;
+    }${name !== 'carriers_v8_hd' ? '/all' : ''}/${name}-${ctx.params.z}-${
+      ctx.params.x
+    }-${ctx.params.y}.pbf`;
     ctx.redirect(url);
     return;
   }
