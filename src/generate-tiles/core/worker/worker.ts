@@ -59,7 +59,7 @@ async function generateTileHeatmap(options, date, coords) {
         filters,
         options.heatmap.temporalAggregation,
       );
-      console.log('Query ' + interval, query);
+
       const data = await getPool(options).query(query[0]);
       if (!data || data.rows.length === 0) {
         console.log('no-tile');
@@ -143,7 +143,7 @@ async function generateTilePosition(options, date, coords) {
         [options],
         'position',
       );
-      console.log('query', query);
+
       const data = await getPool(options).query(query[0]);
       if (!data || data.rows.length === 0) {
         console.log('no-tile');

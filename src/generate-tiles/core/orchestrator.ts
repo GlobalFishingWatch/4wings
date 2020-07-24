@@ -61,7 +61,7 @@ export async function run(
   overrideConfig,
 ) {
   const pool = workerpool.pool(`${__dirname}/worker/worker.js`, {
-    maxWorkers: 2,
+    maxWorkers: 8,
   });
 
   logger.debug('Obtaining options');
