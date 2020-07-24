@@ -118,6 +118,7 @@ export async function generateCustomPBF(
       }
     }
   }
+
   const proto = await protobuf.load(`${__dirname}/../proto/tile.proto`);
   const protoTile = proto.lookupType('tile.Tile');
   const pbf = protoTile.encode(protoTile.create({ data })).finish();
