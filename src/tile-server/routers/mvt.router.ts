@@ -33,7 +33,7 @@ async function getClientByDataset(dataset) {
     if (dataset.target.database.port && process.env.NODE_ENV === 'dev') {
       connection.port = dataset.target.database.port;
     }
-    connection.port = 5434;
+
     pools[dataset.name] = new Pool(connection);
   }
 
