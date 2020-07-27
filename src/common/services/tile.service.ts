@@ -122,9 +122,9 @@ export class TileService {
           }
 
           if (data.length > 1) {
-            results[cell][row.htime][index] += row.count;
+            results[cell][row.htime][index] += row.count * 100;
           } else {
-            results[cell][row.htime] += row.count;
+            results[cell][row.htime] += row.count * 100;
             if (ctxState.mode) {
               results[cell][`${row.htime}_${ctxState.mode}`] =
                 row[`mode_${ctxState.mode}`];
@@ -139,9 +139,9 @@ export class TileService {
             }
           }
           if (data.length > 1) {
-            results[cell].count[index] += row.count;
+            results[cell].count[index] += row.count * 100;
           } else {
-            results[cell].count += row.count;
+            results[cell].count += row.count * 100;
             if (ctxState.mode) {
               results[cell].count[`${ctxState.mode}`] =
                 row[`mode_${ctxState.mode}`];
