@@ -106,7 +106,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
       dataset.cache.dir ? `/${dataset.cache.dir}` : ''
     }${ctx.state.dataset[0].name !== 'carriers_v8_hd' ? '/all' : ''}/${name}-${
       ctx.params.z
-    }-${ctx.params.x}-${ctx.params.y}.pbf`;
+    }-${ctx.params.x}-${ctx.params.y}.pbf?rand=${Math.random()}`;
     ctx.redirect(url);
     return;
   }
