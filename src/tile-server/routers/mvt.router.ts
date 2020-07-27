@@ -30,7 +30,7 @@ async function getClientByDataset(dataset) {
     } else {
       connection.host = dataset.target.database.host;
     }
-    if (dataset.target.database.port) {
+    if (dataset.target.database.port && process.env.NODE_ENV === 'dev') {
       connection.port = dataset.target.database.port;
     }
     connection.port = 5434;
