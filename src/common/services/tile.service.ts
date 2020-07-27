@@ -109,24 +109,25 @@ export class TileService {
         if (!isNaN(row.count)) {
           row.count = parseFloat(row.count);
         }
+        let rowHtime = row.htime;
         if (interval) {
-          row.htime = Math.floor((row.htime * originalInterval) / interval);
+          rowHtime = Math.floor((rowHtime * originalInterval) / interval);
         }
         if (!ctxState.temporalAggregation) {
-          if (!results[cell][row.htime]) {
+          if (!results[cell][rowHtime]) {
             if (data.length > 1) {
-              results[cell][row.htime] = new Array(data.length).fill(0);
+              results[cell][rowHtime] = new Array(data.length).fill(0);
             } else {
-              results[cell][row.htime] = 0;
+              results[cell][rowHtime] = 0;
             }
           }
 
           if (data.length > 1) {
-            results[cell][row.htime][index] += row.count * 100;
+            results[cell][rowHtime][index] += row.count * 100;
           } else {
-            results[cell][row.htime] += row.count * 100;
+            results[cell][rowHtime] += row.count * 100;
             if (ctxState.mode) {
-              results[cell][`${row.htime}_${ctxState.mode}`] =
+              results[cell][`${rowHtime}_${ctxState.mode}`] =
                 row[`mode_${ctxState.mode}`];
             }
           }

@@ -73,6 +73,15 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     return;
   }
 
+  if (
+    ctx.state.dataset[0].name === 'fishing_v3' &&
+    ctx.query.interval !== '10days'
+  ) {
+    console.log('Not cache');
+    await next();
+    return;
+  }
+
   const dataset = ctx.state.dataset[0];
   if (!dataset.cache) {
     console.log('Cache not configured');
