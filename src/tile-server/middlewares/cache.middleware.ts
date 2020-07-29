@@ -62,9 +62,11 @@ function allDataFilters(dataset, filters) {
 }
 
 function yearCache(dataset, filters, interval) {
-  let years = [2012, 2013];
-  for (let i = 0; i < years.length; i++) {
-    const year = years[i];
+  for (
+    let year = new Date(dataset.startDate).getFullYear();
+    year <= new Date(dataset.endDate).getFullYear();
+    year++
+  ) {
     const date = DateTime.utc(year).startOf('year');
 
     const checkStartDate = existTuple(
@@ -85,7 +87,7 @@ function yearCache(dataset, filters, interval) {
       numFilters(filters) === 2 &&
       interval === 'day'
     ) {
-      return years[i];
+      return year;
     }
   }
   return null;

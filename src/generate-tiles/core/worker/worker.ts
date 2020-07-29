@@ -4,6 +4,7 @@ import { logger } from 'logger';
 import { Pool } from 'pg';
 import { Storage } from '@google-cloud/storage';
 import { PassThrough } from 'stream';
+import { DateTime } from 'luxon';
 
 let pool = null;
 let storage = null;
@@ -42,12 +43,14 @@ async function generateTileHeatmap(options, date, coords) {
       let filters = undefined;
       if (period === 'yearly') {
         interval = 86400;
+        const startDate = DateTime.utc(date.getFullYear()).startOf('year');
 
-        let startDate = new Date(Date.UTC(date.getFullYear(), 0, 1, 0, 0, 0));
         let endDate = new Date(
           Date.UTC(date.getFullYear() + 1, 2, 31, 23, 59, 59),
         );
-        filters = `timestamp >= '${startDate.toISOString()}' and timestamp <= '${endDate.toISOString()}'`;
+        filters = `timestamp >= '${date.toISO()}' and timestamp <= '${date
+          .plus({ year: 1, days: 100 })
+          .toISO()}'`;
       } else if (period === 'all') {
         interval = 86400 * 10;
       }
