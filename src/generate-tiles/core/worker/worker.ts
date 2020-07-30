@@ -45,10 +45,7 @@ async function generateTileHeatmap(options, date, coords) {
         interval = 86400;
         const startDate = DateTime.utc(date.getFullYear()).startOf('year');
 
-        let endDate = new Date(
-          Date.UTC(date.getFullYear() + 1, 2, 31, 23, 59, 59),
-        );
-        filters = `timestamp >= '${date.toISO()}' and timestamp <= '${date
+        filters = `timestamp >= '${startDate.toISO()}' and timestamp <= '${startDate
           .plus({ year: 1, days: 100 })
           .toISO()}'`;
       } else if (period === 'all') {
