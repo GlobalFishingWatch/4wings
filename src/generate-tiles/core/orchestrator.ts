@@ -67,7 +67,7 @@ export async function run(
   logger.debug('Obtaining options');
   const options: any = await getOptions(url, token);
 
-  // await removeGCSDir(options, date);
+  await removeGCSDir(options, date);
 
   if (options.heatmap && options.heatmap.cache) {
     logger.debug(
