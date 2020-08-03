@@ -2,6 +2,9 @@ import * as Koa from 'koa';
 import { DateTime } from 'luxon';
 
 function existTuple(filters, column, operator, value) {
+  if (!filters) {
+    return false;
+  }
   if (Array.isArray(filters)) {
     return filters.some((filter) => {
       return existTuple(filter, column, operator, value);
