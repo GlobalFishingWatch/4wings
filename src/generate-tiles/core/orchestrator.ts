@@ -39,6 +39,7 @@ async function removeGCSDir(options, date) {
       const period = options.cache.periods[i];
       if (period === 'all') {
         optionsDel.prefix = `${options.cache.dir}/${period}`;
+        continue;
       } else if (period === 'yearly') {
         optionsDel.prefix = `${
           options.cache.dir
