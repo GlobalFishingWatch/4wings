@@ -24,7 +24,7 @@ export class TileService {
     coords,
     datasets,
     typeTile,
-    filters: any = null,
+    filters: any[] = null,
     temporalAggregation = false,
     mode = null,
   ) {
@@ -37,7 +37,6 @@ export class TileService {
       if (typeTile === 'heatmap') {
         query = `
     select cell ${!temporalAggregation ? ',htime' : ''}
-    ${mode ? `,mode() WITHIN GROUP (ORDER BY ${mode}) as mode_${mode},` : ''}
      ${
        type.columns.length > 0
          ? `,${type.columns
@@ -47,14 +46,14 @@ export class TileService {
      }
     from ${dataset.name}_z${coords.z}
     where pos = ${parseInt(pos, 10)}
-    ${filters ? `and ${filters}` : ''}
+    ${filters && filters[index] ? `and ${filters[index]}` : ''}
     group by 1${!temporalAggregation ? ',2' : ''}`;
       } else {
         query = `
     select htime, lat, lon ${type.columns ? `, ${type.columns.join(',')}` : ''}
     from ${dataset.name}_z${coords.z}
     where pos = ${parseInt(pos, 10)}
-    ${filters ? `and ${filters}` : ''}`;
+    ${filters && filters[index] ? `and ${filters[index]}` : ''}`;
       }
       return query;
     });

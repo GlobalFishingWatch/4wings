@@ -56,7 +56,7 @@ async function generateTileHeatmap(options, date, coords) {
         coords,
         [options],
         'heatmap',
-        filters,
+        [filters],
         options.heatmap.temporalAggregation,
       );
 

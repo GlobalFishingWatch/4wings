@@ -7,6 +7,7 @@ import { Pool } from 'pg';
 import { tmpdir } from 'os';
 import { Storage } from '@google-cloud/storage';
 import { importData } from './import-data';
+import { DateTime } from 'luxon';
 
 function toString(options, data) {
   let row = `${data.lat},${data.lon},${data.pos},${data.cell},${
@@ -26,11 +27,23 @@ export default class CloudSQLWriter implements Writer {
   pool: any;
   tmpDir: string;
   storage: any;
+  year: number;
+  startDate: string;
+  endDate: string;
   constructor(
     private options: any,
     private date: string,
     private period: string,
-  ) {}
+  ) {
+    this.year = new Date(this.date).getFullYear();
+    const luxonDate = DateTime.utc(this.year).startOf('year');
+    this.startDate = luxonDate.toISO().slice(0, 19).replace('T', ' ');
+    this.endDate = luxonDate
+      .plus({ year: 1 })
+      .toISO()
+      .slice(0, 19)
+      .replace('T', ' ');
+  }
 
   flushBuffer() {
     this.buffer.forEach((value) => {
@@ -44,12 +57,16 @@ export default class CloudSQLWriter implements Writer {
     logger.debug('Creating tables');
     const generationOptions = {
       ...this.options,
+      startDate: this.startDate,
+      endDate: this.endDate,
+      year: this.year,
       extraColumns: this.options.target.columnsDefinition,
     };
     const tables = await ejs.renderFile(
       `${__dirname}/templates/tables.ejs`,
       generationOptions,
     );
+
     await this.pool.query(tables);
     logger.debug('Tables created successfully');
   }
@@ -59,6 +76,9 @@ export default class CloudSQLWriter implements Writer {
       logger.debug('Creating cluster sqls');
       const generationOptions = {
         ...this.options,
+        startDate: this.startDate,
+        endDate: this.endDate,
+        year: this.year,
       };
       for (let i = 0; i <= generationOptions.maxZoom; i++) {
         logger.debug(`Creating cluster for ${i} level`);
@@ -123,6 +143,7 @@ export default class CloudSQLWriter implements Writer {
       ...this.options.target.database,
       host: `${this.options.target.database.projectId}-${this.options.target.database.region}-${this.options.target.database.instanceId}`,
     };
+
     this.pool = new Pool(options);
   }
 

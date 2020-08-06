@@ -29,7 +29,7 @@ export async function run(url, date, period, token, overrideConfig) {
     logger.debug('Initializing writer');
     const writerClass = (await import(`../writers/${config.target.type}`))
       .default;
-    writer = new writerClass(config);
+    writer = new writerClass(config, date, period);
     await writer.init();
   } catch (err) {
     logger.error('Error initializing writer', err);

@@ -3,8 +3,10 @@ import * as Koa from 'koa';
 import { Pool } from 'pg';
 import { logger } from 'logger';
 import { existDataset } from 'tile-server/middlewares/exist-dataset.middleware';
+import { existDataset as existDatasetV1 } from 'tile-server/middlewares/exist-dataset-v1.middleware';
 import { existType } from 'tile-server/middlewares/exist-type.middleware';
 import { cache } from 'tile-server/middlewares/cache.middleware';
+import { cache as cacheV1 } from 'tile-server/middlewares/cache-v1.middleware';
 import * as zlib from 'zlib';
 import { TileService } from 'common/services/tile.service';
 
@@ -141,7 +143,9 @@ class MVTRouter {
       coords,
       ctx.state.dataset,
       ctx.params.type,
-      ctx.query.filters,
+      Array.isArray(ctx.state.filters)
+        ? ctx.state.filters
+        : [ctx.query.filters],
       ctx.state.temporalAggregation,
       ctx.state.mode,
     );
@@ -220,6 +224,13 @@ router.get(
   existDataset,
   existType,
   cache,
+  MVTRouter.getTile,
+);
+router.get(
+  '/datasets/:dataset/tile/:type/:z/:x/:y',
+  existDatasetV1,
+  existType,
+  cacheV1,
   MVTRouter.getTile,
 );
 

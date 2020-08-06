@@ -2,6 +2,9 @@ import * as Koa from 'koa';
 import { DateTime } from 'luxon';
 
 function existTuple(filters, column, operator, value) {
+  if (!filters) {
+    return false;
+  }
   if (Array.isArray(filters)) {
     return filters.some((filter) => {
       return existTuple(filter, column, operator, value);
@@ -61,7 +64,7 @@ function allDataFilters(dataset, filters) {
   return checkEndDate && checkStartDate && numFilters(filters) === 2;
 }
 
-function yearCache(dataset, filters, interval) {
+function yearCache(dataset, dateRange = '', interval) {
   for (
     let year = new Date(dataset.startDate).getFullYear();
     year <= new Date(dataset.endDate).getFullYear();
@@ -69,24 +72,19 @@ function yearCache(dataset, filters, interval) {
   ) {
     const date = DateTime.utc(year).startOf('year');
 
-    const checkStartDate = existTuple(
-      filters,
-      'timestamp',
-      '>=',
-      date.toISO().slice(0, 19).replace('T', ' '),
-    );
-    const checkEndDate = existTuple(
-      filters,
-      'timestamp',
-      '<=',
-      date.plus({ year: 1, days: 100 }).toISO().slice(0, 19).replace('T', ' '),
-    );
-    if (
-      checkEndDate &&
-      checkStartDate &&
-      numFilters(filters) === 2 &&
-      interval === 'day'
-    ) {
+    let checkStartDate = false;
+    let checkEndDate = false;
+    if (dateRange) {
+      const dates = dateRange.split(',');
+      checkStartDate = date.toISO().slice(0, 19).replace('T', ' ') === dates[0];
+      checkEndDate =
+        date
+          .plus({ year: 1, days: 100 })
+          .toISO()
+          .slice(0, 19)
+          .replace('T', ' ') === dates[0];
+    }
+    if (checkEndDate && checkStartDate && interval === 'day') {
       return year;
     }
   }
@@ -94,27 +92,26 @@ function yearCache(dataset, filters, interval) {
 }
 
 export async function cache(ctx: Koa.ParameterizedContext, next) {
-  const yearOfCache = yearCache(
-    ctx.state.dataset[0],
-    ctx.state.filters,
-    ctx.query.interval,
-  );
   if (
     (ctx.state.dataset && ctx.state.dataset.length > 1) ||
-    ctx.state.mode ||
-    (ctx.state.filters &&
-      !allDataFilters(ctx.state.dataset[0], ctx.state.filters) &&
-      !yearOfCache)
+    ctx.state.filters
   ) {
     console.log('Not cache');
     await next();
     ctx.set('cache-control', 'public, max-age=3600000');
     return;
   }
+  const yearOfCache = yearCache(
+    ctx.state.dataset[0],
+    ctx.state.dateRange,
+    ctx.query.interval,
+  );
   if (
-    ctx.state.dataset[0].name === 'fishing_v3' &&
-    ctx.query.interval !== '10days' &&
-    ctx.query.interval !== 'day'
+    !yearOfCache ||
+    (!ctx.state.dateRange && ctx.query.interval !== '10days') ||
+    (ctx.state.dataset[0].name.startsWith('fishing') &&
+      ctx.query.interval !== '10days' &&
+      ctx.query.interval !== 'day')
   ) {
     console.log('Not cache');
     await next();
@@ -128,9 +125,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     return;
   }
   const bucket = dataset.cache.bucket;
-  // if (dataset.name === 'fishing_v3') {
-  //   dataset.heatmap.cache = true;
-  // }
+
   const cacheValues = dataset[ctx.params.type];
   if (
     cacheValues.cache &&

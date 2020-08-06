@@ -177,21 +177,12 @@
           id: 'main',
           source: {
             type: 'vector',
-            tiles: [
-              window.location.protocol +
-                '//' +
-                window.location.host +
-                '/v1/' +
-                parts.slice(0, parts.length - 1).join('-') +
-                '/tile/' +
-                parts[1] +
-                `/{z}/{x}/{y}?interval=day${filters}&filters=timestamp >= '2012-01-02 00:00:00' and timestamp <= '2012-12-12 00:00:00' and flag='CHN'`,
-            ],
+            tiles: ['http://104.198.34.215:8080/tile/heatmap/{z}/{x}/{y}'],
           },
-          'source-layer': parts[0],
+          'source-layer': 'dataset',
           type: 'fill',
           paint: {
-            'fill-color': getColor(selectedDate),
+            'fill-color': '#ff0000',
           },
         };
 
@@ -286,7 +277,7 @@
         center: [-3.6694335937500004, 40.455307212131494], // starting position [lng, lat]
         zoom: 0, // starting zoom
         minZoom: 0,
-        maxZoom: 12,
+        maxZoom: 8,
         hash: true,
       });
       map.showTileBoundaries = true;
