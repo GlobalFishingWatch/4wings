@@ -33,6 +33,7 @@ function checkFilterFieldsInDataset(dataset, filters) {
 
 export async function existDataset(ctx, next) {
   const datasets = ctx.params.dataset.split(',');
+  console.log('datasets', datasets);
   ctx.state.filters = [];
   if (ctx.query['date-range']) {
     ctx.state.dateRange = ctx.query['date-range'].split(',');
@@ -42,13 +43,13 @@ export async function existDataset(ctx, next) {
   ctx.state.dataset = await Promise.all(
     datasets.map(async (d, i) => {
       let parsedFilters;
-      let filters = '';
-      if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
-        filters = `timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
-      }
+      let filters;
+      // if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
+      //   filters = `timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+      // }
       try {
         if (ctx.query[`filters[${i}]`] && ctx.query[`filters[${i}]`].trim()) {
-          filters += ` and ${ctx.query[`filters[${i}]`].trim()}`;
+          filters = ` ${ctx.query[`filters[${i}]`].trim()}`;
 
           parsedFilters = parser.parse(filters);
         }
@@ -68,6 +69,7 @@ export async function existDataset(ctx, next) {
           return;
         }
       }
+
       ctx.state.filters.push(filters);
       if (ctx.query.interval) {
         let interval = null;

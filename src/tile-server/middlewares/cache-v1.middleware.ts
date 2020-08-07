@@ -64,7 +64,7 @@ function allDataFilters(dataset, filters) {
   return checkEndDate && checkStartDate && numFilters(filters) === 2;
 }
 
-function yearCache(dataset, dateRange = '', interval) {
+function yearCache(dataset, dateRange = [], interval) {
   for (
     let year = new Date(dataset.startDate).getFullYear();
     year <= new Date(dataset.endDate).getFullYear();
@@ -75,14 +75,15 @@ function yearCache(dataset, dateRange = '', interval) {
     let checkStartDate = false;
     let checkEndDate = false;
     if (dateRange) {
-      const dates = dateRange.split(',');
-      checkStartDate = date.toISO().slice(0, 19).replace('T', ' ') === dates[0];
+      checkStartDate =
+        date.toISO().slice(0, 19).replace('T', ' ') === dateRange[0];
+
       checkEndDate =
         date
           .plus({ year: 1, days: 100 })
           .toISO()
           .slice(0, 19)
-          .replace('T', ' ') === dates[0];
+          .replace('T', ' ') === dateRange[1];
     }
     if (checkEndDate && checkStartDate && interval === 'day') {
       return year;
@@ -94,24 +95,24 @@ function yearCache(dataset, dateRange = '', interval) {
 export async function cache(ctx: Koa.ParameterizedContext, next) {
   if (
     (ctx.state.dataset && ctx.state.dataset.length > 1) ||
-    ctx.state.filters
+    (ctx.state.filters && ctx.state.filters[0])
   ) {
-    console.log('Not cache');
+    console.log('Not cache because several datasets');
     await next();
     ctx.set('cache-control', 'public, max-age=3600000');
     return;
   }
+
   const yearOfCache = yearCache(
     ctx.state.dataset[0],
     ctx.state.dateRange,
     ctx.query.interval,
   );
   if (
-    !yearOfCache ||
-    (!ctx.state.dateRange && ctx.query.interval !== '10days') ||
-    (ctx.state.dataset[0].name.startsWith('fishing') &&
-      ctx.query.interval !== '10days' &&
-      ctx.query.interval !== 'day')
+    !yearOfCache &&
+    !ctx.state.dateRange &&
+    ctx.query.interval !== '10days' &&
+    ctx.query.interval !== 'day'
   ) {
     console.log('Not cache');
     await next();
@@ -138,7 +139,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     }
     let url;
 
-    if (yearOfCache && ctx.state.dataset[0].name === 'fishing_v3') {
+    if (yearOfCache) {
       url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
         dataset.cache.dir ? `/${dataset.cache.dir}` : ''
       }/yearly/${yearOfCache}/${name}-${ctx.params.z}-${ctx.params.x}-${

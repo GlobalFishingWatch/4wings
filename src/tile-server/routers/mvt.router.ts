@@ -139,6 +139,15 @@ class MVTRouter {
       x: parseInt(ctx.params.x, 10),
       y: parseInt(ctx.params.y, 10),
     };
+    if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
+      ctx.query.filters = ctx.query.filters.map((filter) => {
+        if (!filter) {
+          filter = '';
+        }
+        filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+        return filter;
+      });
+    }
     const query = await TileService.generateQuery(
       coords,
       ctx.state.dataset,
@@ -147,7 +156,6 @@ class MVTRouter {
         ? ctx.state.filters
         : [ctx.query.filters],
       ctx.state.temporalAggregation,
-      ctx.state.mode,
     );
 
     const promises = ctx.state.dataset.map(async (d, i) => {

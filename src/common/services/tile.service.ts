@@ -26,7 +26,6 @@ export class TileService {
     typeTile,
     filters: any[] = null,
     temporalAggregation = false,
-    mode = null,
   ) {
     // static async generateQuery(ctx: Koa.ParameterizedContext) {
     const pos = tile2Num(coords.z, coords.x, coords.y);

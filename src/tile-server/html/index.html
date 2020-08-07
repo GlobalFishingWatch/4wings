@@ -177,9 +177,18 @@
           id: 'main',
           source: {
             type: 'vector',
-            tiles: ['http://104.198.34.215:8080/tile/heatmap/{z}/{x}/{y}'],
+            tiles: [
+              window.location.protocol +
+                '//' +
+                window.location.host +
+                '/v1/datasets/' +
+                parts.slice(0, parts.length - 1).join('-') +
+                '/tile/' +
+                parts[1] +
+                `/{z}/{x}/{y}?interval=10days${filters}`,
+            ],
           },
-          'source-layer': 'dataset',
+          'source-layer': parts.slice(0, parts.length - 1).join('-'),
           type: 'fill',
           paint: {
             'fill-color': '#ff0000',
