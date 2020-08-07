@@ -140,7 +140,7 @@ class MVTRouter {
       y: parseInt(ctx.params.y, 10),
     };
     if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
-      ctx.query.filters = ctx.query.filters.map((filter) => {
+      ctx.state.filters = ctx.state.filters.map((filter) => {
         if (!filter) {
           filter = '';
         }
