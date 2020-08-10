@@ -156,6 +156,7 @@ class MVTRouter {
         ? ctx.state.filters
         : [ctx.query.filters],
       ctx.state.temporalAggregation,
+      ctx.state.interval,
     );
 
     const promises = ctx.state.dataset.map(async (d, i) => {

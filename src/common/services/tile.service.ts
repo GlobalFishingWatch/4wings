@@ -26,16 +26,21 @@ export class TileService {
     typeTile,
     filters: any[] = null,
     temporalAggregation = false,
+    interval?,
   ) {
     // static async generateQuery(ctx: Koa.ParameterizedContext) {
     const pos = tile2Num(coords.z, coords.x, coords.y);
 
     return datasets.map((dataset, index) => {
       let query = '';
+      let htimeColumn = 'htime';
+      if (interval && dataset.heatmap.time !== interval) {
+        htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval})`;
+      }
       const type = dataset[typeTile];
       if (typeTile === 'heatmap') {
         query = `
-    select cell ${!temporalAggregation ? ',htime' : ''}
+    select cell ${!temporalAggregation ? `,${htimeColumn}` : ''}
      ${
        type.columns.length > 0
          ? `,${type.columns
@@ -85,7 +90,7 @@ export class TileService {
     let results = new Array(numCellsLat * numCellsLon);
 
     data.forEach((d, index) => {
-      let originalInterval = datasets[index].heatmap.time;
+      // let originalInterval = datasets[index].heatmap.time;
       d.rows.forEach((row) => {
         const cell = row.cell;
         if (!results[cell]) {
@@ -108,9 +113,9 @@ export class TileService {
           row.count = parseFloat(row.count);
         }
         let rowHtime = row.htime;
-        if (interval) {
-          rowHtime = Math.floor((rowHtime * originalInterval) / interval);
-        }
+        // if (interval) {
+        //   rowHtime = Math.floor((rowHtime * originalInterval) / interval);
+        // }
         if (!ctxState.temporalAggregation) {
           if (!results[cell][rowHtime]) {
             if (data.length > 1) {
