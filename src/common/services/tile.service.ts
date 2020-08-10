@@ -35,7 +35,7 @@ export class TileService {
       let query = '';
       let htimeColumn = 'htime';
       if (interval && dataset.heatmap.time !== interval) {
-        htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval})`;
+        htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval}) as htime`;
       }
       const type = dataset[typeTile];
       if (typeTile === 'heatmap') {
