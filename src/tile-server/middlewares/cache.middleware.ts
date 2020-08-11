@@ -145,7 +145,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     }
     let url;
 
-    if (yearOfCache && ctx.state.dataset[0].name === 'fishing_v3') {
+    if (yearOfCache && ctx.state.dataset[0].name.startsWith('fishing_')) {
       url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
         dataset.cache.dir ? `/${dataset.cache.dir}` : ''
       }/yearly/${yearOfCache}/${name}-${ctx.params.z}-${ctx.params.x}-${
@@ -160,7 +160,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
         ctx.params.y
       }.pbf?rand=${Math.random()}`;
     }
-
+    console.log('url', url);
     ctx.redirect(url);
     return;
   }
