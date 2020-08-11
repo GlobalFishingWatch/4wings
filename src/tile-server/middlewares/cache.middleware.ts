@@ -6,7 +6,7 @@ function existTuple(filters, column, operator, value) {
     return filters.some((filter) => {
       return existTuple(filter, column, operator, value);
     });
-  } else {
+  } else if (filters) {
     return Object.keys(filters).some((k) => {
       if (k.toLowerCase() === 'and' || k.toLowerCase() === 'or') {
         return existTuple(filters[k], column, operator, value);
@@ -21,6 +21,8 @@ function existTuple(filters, column, operator, value) {
         return existTuple(filters[k], column, operator, value);
       }
     });
+  } else {
+    return false;
   }
 }
 

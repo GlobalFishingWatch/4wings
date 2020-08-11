@@ -33,7 +33,6 @@ function checkFilterFieldsInDataset(dataset, filters) {
 
 export async function existDataset(ctx, next) {
   const datasets = ctx.params.dataset.split(',');
-  console.log('datasets', datasets);
   ctx.state.filters = [];
   if (ctx.query['date-range']) {
     ctx.state.dateRange = ctx.query['date-range'].split(',');
