@@ -103,6 +103,23 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     return;
   }
 
+  if (ctx.state.dataset[0].name.startsWith('dgg')) {
+    const dataset = ctx.state.dataset[0];
+    const bucket = dataset.cache.bucket;
+
+    let name = ctx.params.type;
+    if (ctx.params.type === 'heatmap' && ctx.query.format === 'intArray') {
+      name = 'intArray';
+    }
+    const url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
+      dataset.cache.dir ? `/${dataset.cache.dir}` : ''
+    }/${name}-${ctx.params.z}-${ctx.params.x}-${
+      ctx.params.y
+    }.pbf?rand=${Math.random()}`;
+    ctx.redirect(url);
+    return;
+  }
+
   const yearOfCache = yearCache(
     ctx.state.dataset[0],
     ctx.state.dateRange,
