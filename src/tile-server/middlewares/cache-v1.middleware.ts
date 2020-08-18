@@ -103,7 +103,10 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     return;
   }
 
-  if (ctx.state.dataset[0].name.startsWith('dgg')) {
+  if (
+    ctx.state.dataset[0].name.contains('galapagos') ||
+    ctx.state.dataset[0].name.contains('caribe')
+  ) {
     const dataset = ctx.state.dataset[0];
     const bucket = dataset.cache.bucket;
 
