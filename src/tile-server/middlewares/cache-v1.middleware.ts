@@ -104,8 +104,8 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
   }
 
   if (
-    ctx.state.dataset[0].name.contains('galapagos') ||
-    ctx.state.dataset[0].name.contains('caribe')
+    ctx.state.dataset[0].name.includes('galapagos') ||
+    ctx.state.dataset[0].name.includes('caribe')
   ) {
     const dataset = ctx.state.dataset[0];
     const bucket = dataset.cache.bucket;
