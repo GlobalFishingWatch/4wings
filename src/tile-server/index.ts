@@ -9,6 +9,7 @@ import * as Views from 'koa-views';
 import * as Static from 'koa-static';
 
 import mvtRouter from './routers/mvt.router';
+import statsRouter from './routers/stats.router';
 
 export async function start(args, overrideConfig) {
   const app = new Koa();
@@ -39,6 +40,7 @@ export async function start(args, overrideConfig) {
   );
 
   app.use(mvtRouter.routes()).use(mvtRouter.allowedMethods());
+  app.use(statsRouter.routes()).use(statsRouter.allowedMethods());
 
   const server = app.listen(process.env.PORT || 5000, () => {
     console.log(`Running mvt tile server in port ${process.env.PORT || 5000}`);
