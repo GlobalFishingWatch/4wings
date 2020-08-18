@@ -18,6 +18,10 @@ class StatsRouter {
   }
 }
 
-router.get('/:dataset/stats/:aoiId', existDataset, StatsRouter.getStats);
+router.get(
+  '/datasets/:dataset/stats/:aoiId',
+  existDataset,
+  StatsRouter.getStats,
+);
 
 export default router;
