@@ -1,5 +1,6 @@
 import * as Koa from 'koa';
 import { DateTime } from 'luxon';
+import * as request from 'request';
 
 function existTuple(filters, column, operator, value) {
   if (!filters) {
@@ -119,7 +120,15 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     }/${name}-${ctx.params.z}-${ctx.params.x}-${
       ctx.params.y
     }.pbf?rand=${Math.random()}`;
-    ctx.redirect(url);
+    if (ctx.query.proxy && ctx.query.proxy === 'true') {
+      ctx.body = request({
+        uri: `https:${url}`,
+        method: 'GET',
+      });
+    } else {
+      ctx.redirect(url);
+    }
+
     return;
   }
 
@@ -175,7 +184,14 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
       }.pbf?rand=${Math.random()}`;
     }
 
-    ctx.redirect(url);
+    if (ctx.query.proxy && ctx.query.proxy === 'true') {
+      ctx.body = request({
+        uri: `https:${url}`,
+        method: 'GET',
+      });
+    } else {
+      ctx.redirect(url);
+    }
     return;
   }
 

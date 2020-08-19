@@ -46,6 +46,7 @@
     "pg": "^8.0.2",
     "pg-copy-streams": "^2.2.2",
     "protobufjs": "^6.9.0",
+    "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "sql-where-parser": "^2.2.1",
     "through2": "^3.0.1",
