@@ -33,7 +33,7 @@ function checkFilterFieldsInDataset(dataset, filters) {
 
 export async function existDataset(ctx, next) {
   const datasets = ctx.params.dataset.split(',');
-  ctx.state.filters = [];
+  ctx.state.filters = new Array(datasets.length);
   if (ctx.query['date-range']) {
     ctx.state.dateRange = ctx.query['date-range'].split(',');
   } else {
@@ -69,7 +69,7 @@ export async function existDataset(ctx, next) {
         }
       }
 
-      ctx.state.filters.push(filters);
+      ctx.state.filters[i] = filters;
       if (ctx.query.interval) {
         let interval = null;
         if (ctx.query.interval === 'day') {
