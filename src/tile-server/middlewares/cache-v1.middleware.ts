@@ -76,16 +76,14 @@ function yearCache(dataset, dateRange = [], interval) {
     let checkStartDate = false;
     let checkEndDate = false;
     if (dateRange) {
-      checkStartDate =
-        date.toISO().slice(0, 19).replace('T', ' ') === dateRange[0];
-
-      checkEndDate =
-        date
-          .plus({ year: 1, days: 100 })
-          .toISO()
-          .slice(0, 19)
-          .replace('T', ' ') === dateRange[1];
+      checkStartDate = date.toISO() === dateRange[0];
+      console.log({
+        start: date.toISO(),
+        end: date.plus({ year: 1, days: 100 }).toISO(),
+      });
+      checkEndDate = date.plus({ year: 1, days: 100 }).toISO() === dateRange[1];
     }
+
     if (checkEndDate && checkStartDate && interval === 'day') {
       return year;
     }
@@ -137,6 +135,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     ctx.state.dateRange,
     ctx.query.interval,
   );
+  console.log('yearOfCache', yearOfCache);
   if (
     !yearOfCache &&
     !ctx.state.dateRange &&
