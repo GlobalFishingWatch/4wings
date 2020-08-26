@@ -120,7 +120,8 @@ class MVTRouter {
       );
     } else {
       const promises = [];
-      for (let i = 0; i <= ctx.state.dataset[0].maxZoom || 8; i++) {
+      console.log('maxZoom', ctx.state.dataset[0].maxZoom);
+      for (let i = 0; i <= ctx.state.dataset[0].maxZoom; i++) {
         const zoom = i;
         promises.push(
           MVTRouter.getStatisticsByZoom(ctx, i).then((data) => {
