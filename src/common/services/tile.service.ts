@@ -190,7 +190,7 @@ export class TileService {
       }
       const layer = datasets.map((d) => d.name).join(',');
 
-      return vtpbf.fromGeojsonVt({ [layer]: tile }, { version: 2 });
+      return vtpbf.fromGeojsonVt({ main: tile }, { version: 2 });
     }
   }
 
