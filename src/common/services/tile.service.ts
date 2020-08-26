@@ -156,7 +156,6 @@ export class TileService {
     });
 
     if (format === 'intArray') {
-      console.log(results);
       return await generateCustomPBF(
         datasets,
         ctxState,
