@@ -135,19 +135,19 @@ export class TileService {
             }
           }
         } else {
-          if (!results[cell].count) {
+          if (!results[cell].value) {
             if (data.length > 1) {
-              results[cell].count = new Array(data.length).fill(0);
+              results[cell].value = new Array(data.length).fill(0);
             } else {
-              results[cell].count = 0;
+              results[cell].value = 0;
             }
           }
           if (data.length > 1) {
-            results[cell].count[index] += row.count * 100;
+            results[cell].value[index] += row.count * 100;
           } else {
-            results[cell].count += row.count * 100;
+            results[cell].value += row.count * 100;
             if (ctxState.mode) {
-              results[cell].count[`${ctxState.mode}`] =
+              results[cell].value[`${ctxState.mode}`] =
                 row[`mode_${ctxState.mode}`];
             }
           }
@@ -156,7 +156,7 @@ export class TileService {
     });
 
     if (format === 'intArray') {
-      // console.log(results);
+      console.log(results);
       return await generateCustomPBF(
         datasets,
         ctxState,
