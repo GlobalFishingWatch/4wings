@@ -120,7 +120,7 @@ class MVTRouter {
       );
     } else {
       const promises = [];
-      for (let i = 0; i <= ctx.state.dataset[0].maxZoom; i++) {
+      for (let i = 0; i <= ctx.state.dataset[0].maxZoom || 8; i++) {
         const zoom = i;
         promises.push(
           MVTRouter.getStatisticsByZoom(ctx, i).then((data) => {
@@ -243,6 +243,16 @@ router.get(
   MVTRouter.getTile,
 );
 
+router.get(
+  '/datasets/:dataset/legend/:z',
+  existDatasetV1,
+  MVTRouter.getStatistics,
+);
+router.get(
+  '/datasets/:dataset/legend',
+  existDatasetV1,
+  MVTRouter.getStatistics,
+);
 router.get('/:dataset/statistics/:z', existDataset, MVTRouter.getStatistics);
 router.get('/:dataset/statistics', existDataset, MVTRouter.getStatistics);
 
