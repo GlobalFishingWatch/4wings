@@ -46,7 +46,7 @@ class MVTRouter {
     ctx: Koa.ParameterizedContext,
     zoom: number,
   ) {
-    const queries = ctx.state.dataset.map(async (d) => {
+    const queries = ctx.state.dataset.map(async (d, i) => {
       const type = d.heatmap;
       const statisticsQuery = `
       select max(sub.count) as max, min(sub.count) as min, avg(sub.count) as avg, percentile_cont(0.5) within group (order by sub.count) as median  from (select ${type.columns
@@ -54,7 +54,7 @@ class MVTRouter {
         .map((h) => `${h.func}(${h.column}) as count`)
         .join(',')}
       from ${d.name}_z${zoom}
-      ${ctx.query.filters ? `WHERE ${ctx.query.filters}` : ''}
+      ${ctx.state.filters[i] ? `WHERE ${ctx.state.filters[i]}` : ''}
       group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub
       `;
 
