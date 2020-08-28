@@ -112,6 +112,72 @@ class MVTRouter {
     }
   }
 
+  static async getSamplingByZoom(ctx: Koa.ParameterizedContext, zoom: number) {
+    const queries = ctx.state.dataset.map(async (d, i) => {
+      const type = d.heatmap;
+      const statisticsQuery = `
+      select  count  from (select ${type.columns
+        .filter((h) => h.alias === 'count')
+        .map((h) => `${h.func}(${h.column}) as count`)
+        .join(',')}
+      from ${d.name}_z${zoom} TABLESAMPLE SYSTEM (0.01)
+      ${ctx.state.filters[i] ? `WHERE ${ctx.state.filters[i]}` : ''}
+      group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub 
+      `;
+
+      let client;
+      try {
+        client = await getClientByDataset(d);
+        const data = await client.query(statisticsQuery);
+        if (!data || !data.rows || data.rows.length === 0) {
+          console.log('Error obtaining statistics');
+          return { name: d.name, data: null };
+        }
+        Object.keys(data.rows[0]).forEach(
+          (k) => (data.rows[0][k] = parseFloat(data.rows[0][k])),
+        );
+        return {
+          name: d.name,
+          data: data.rows.map((r) => r.count),
+        };
+      } catch (err) {
+        logger.error('Error in sampling query', err);
+        throw err;
+      } finally {
+        if (client) {
+          client.release();
+        }
+      }
+    });
+    try {
+      const data: any = await Promise.all(queries);
+      if (data.every((d: any) => d.data === null)) {
+        console.log('Error obtaining sampling');
+        ctx.throw(404, 'sampling not found');
+      }
+      ctx.body = data;
+      if (data.length === 1) {
+        const body = data[0].data;
+        body.area = ctx.state.dataset[0].cellsByZoom[zoom];
+        body.startDate = ctx.state.dataset[0].startDate;
+        body.endDate = ctx.state.dataset[0].endDate;
+
+        return body;
+      } else {
+        const body: any = data.reduce((p: any, c: any) => {
+          p[c.name] = c.data;
+          return p;
+        }, {});
+
+        body.area = ctx.state.dataset[0].cellsByZoom[zoom];
+        return body;
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
   static async getStatistics(ctx: Koa.ParameterizedContext) {
     if (ctx.params.z) {
       ctx.body = await MVTRouter.getStatisticsByZoom(
@@ -120,11 +186,31 @@ class MVTRouter {
       );
     } else {
       const promises = [];
-      console.log('maxZoom', ctx.state.dataset[0].maxZoom);
       for (let i = 0; i <= ctx.state.dataset[0].maxZoom; i++) {
         const zoom = i;
         promises.push(
           MVTRouter.getStatisticsByZoom(ctx, i).then((data) => {
+            data.zoom = zoom;
+            return data;
+          }),
+        );
+      }
+      ctx.body = await Promise.all(promises);
+    }
+  }
+
+  static async getSampling(ctx: Koa.ParameterizedContext) {
+    if (ctx.params.z) {
+      ctx.body = await MVTRouter.getSamplingByZoom(
+        ctx,
+        parseInt(ctx.params.z, 10),
+      );
+    } else {
+      const promises = [];
+      for (let i = 0; i <= ctx.state.dataset[0].maxZoom; i++) {
+        const zoom = i;
+        promises.push(
+          MVTRouter.getSamplingByZoom(ctx, i).then((data) => {
             data.zoom = zoom;
             return data;
           }),
@@ -254,6 +340,18 @@ router.get(
   existDatasetV1,
   MVTRouter.getStatistics,
 );
+
+router.get(
+  '/datasets/:dataset/sampling/:z',
+  existDatasetV1,
+  MVTRouter.getSampling,
+);
+router.get(
+  '/datasets/:dataset/sampling',
+  existDatasetV1,
+  MVTRouter.getSampling,
+);
+
 router.get('/:dataset/statistics/:z', existDataset, MVTRouter.getStatistics);
 router.get('/:dataset/statistics', existDataset, MVTRouter.getStatistics);
 
