@@ -116,13 +116,16 @@ class MVTRouter {
     const queries = ctx.state.dataset.map(async (d, i) => {
       const type = d.heatmap;
       const statisticsQuery = `
-      select  count  from (select ${type.columns
+
+      with total as (select ${type.columns
         .filter((h) => h.alias === 'count')
         .map((h) => `${h.func}(${h.column}) as count`)
         .join(',')}
-      from ${d.name}_z${zoom} TABLESAMPLE SYSTEM (0.01)
+      from ${d.name}_z${zoom} 
       ${ctx.state.filters[i] ? `WHERE ${ctx.state.filters[i]}` : ''}
-      group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub 
+      group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''})
+
+      select  count  from total limit 1000 
       `;
       console.log(statisticsQuery);
       let client;
@@ -246,7 +249,7 @@ class MVTRouter {
       ctx.state.temporalAggregation,
       ctx.state.interval,
     );
-
+    console.log(query);
     const promises = ctx.state.dataset.map(async (d, i) => {
       let client;
       try {
