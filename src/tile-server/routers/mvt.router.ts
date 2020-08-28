@@ -124,7 +124,7 @@ class MVTRouter {
       ${ctx.state.filters[i] ? `WHERE ${ctx.state.filters[i]}` : ''}
       group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub 
       `;
-
+      console.log(statisticsQuery);
       let client;
       try {
         client = await getClientByDataset(d);
@@ -229,9 +229,10 @@ class MVTRouter {
     if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
       ctx.state.filters = ctx.state.filters.map((filter) => {
         if (!filter) {
-          filter = '';
+          filter = `timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+        } else {
+          filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
         }
-        filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
         return filter;
       });
     }
@@ -315,6 +316,20 @@ class MVTRouter {
   }
 }
 
+async function addDateRange(ctx, next) {
+  if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
+    ctx.state.filters = ctx.state.filters.map((filter) => {
+      if (!filter) {
+        filter = ` timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+      } else {
+        filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+      }
+      return filter;
+    });
+  }
+  await next();
+}
+
 router.get(
   '/:dataset/tile/:type/:z/:x/:y',
   existDataset,
@@ -333,22 +348,26 @@ router.get(
 router.get(
   '/datasets/:dataset/legend/:z',
   existDatasetV1,
+  addDateRange,
   MVTRouter.getStatistics,
 );
 router.get(
   '/datasets/:dataset/legend',
   existDatasetV1,
+  addDateRange,
   MVTRouter.getStatistics,
 );
 
 router.get(
   '/datasets/:dataset/sampling/:z',
   existDatasetV1,
+  addDateRange,
   MVTRouter.getSampling,
 );
 router.get(
   '/datasets/:dataset/sampling',
   existDatasetV1,
+  addDateRange,
   MVTRouter.getSampling,
 );
 
