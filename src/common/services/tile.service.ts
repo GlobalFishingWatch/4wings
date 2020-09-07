@@ -20,6 +20,10 @@ export class TileService {
     });
   }
 
+  static getPosByCoords(coords) {
+    return tile2Num(coords.z, coords.x, coords.y);
+  }
+
   static async generateQuery(
     coords,
     datasets,
@@ -61,6 +65,24 @@ export class TileService {
       }
       return query;
     });
+  }
+
+  static getCellByDatasetRowAndColumn(dataset, coords, cellColumn, cellRow) {
+    let cellsByZoom = dataset.cellsByZoom;
+    const bounds = boundsFromTile(coords.z, coords.x, coords.y);
+
+    // cellsByZoom = cellsByZoom.map((v) => Math.sqrt(v) / 111320);
+
+    const cellSizeLon = Math.sqrt(cellsByZoom[coords.z]) / 111320;
+
+    const numCellsLon = Math.ceil(
+      (bounds.maxLon - bounds.minLon) / cellSizeLon,
+    );
+    console.log('numCellsLon', numCellsLon);
+    console.log('cellColumn', cellColumn);
+    console.log('cellRow', cellRow);
+
+    return numCellsLon * cellRow + cellColumn;
   }
 
   static async generateHeatmapTile(

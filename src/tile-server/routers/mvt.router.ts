@@ -54,7 +54,11 @@ class MVTRouter {
         .map((h) => `${h.func}(${h.column}) as count`)
         .join(',')}
       from ${d.name}_z${zoom}
-      ${ctx.state.filters[i] ? `WHERE ${ctx.state.filters[i]}` : ''}
+      ${
+        ctx.state.filters && ctx.state.filters[i]
+          ? `WHERE ${ctx.state.filters[i]}`
+          : ''
+      }
       group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub
       `;
 
@@ -199,6 +203,61 @@ class MVTRouter {
         );
       }
       ctx.body = await Promise.all(promises);
+    }
+  }
+  static async getInteraction(ctx: Koa.ParameterizedContext) {
+    const coords = {
+      z: parseInt(ctx.params.z, 10),
+      x: parseInt(ctx.params.x, 10),
+      y: parseInt(ctx.params.y, 10),
+    };
+    const pos = TileService.getPosByCoords(coords);
+    const cell = TileService.getCellByDatasetRowAndColumn(
+      ctx.state.dataset[0],
+      coords,
+      parseInt(ctx.params.cellColumn, 10),
+      parseInt(ctx.params.cellRow),
+    );
+
+    const queries = ctx.state.dataset.map(async (d, i) => {
+      const query = `
+      select distinct vessel_id
+      from ${d.name}_z${ctx.params.z}
+      where pos = ${pos} and cell = ${cell}
+      ${
+        ctx.state.filters && ctx.state.filters[i]
+          ? `AND ${ctx.state.filters[i]}`
+          : ''
+      }      
+      `;
+
+      let client;
+      try {
+        client = await getClientByDataset(d);
+        const data = await client.query(query);
+        if (!data || !data.rows || data.rows.length === 0) {
+          console.log('Error obtaining statistics');
+          return { name: d.name, data: null };
+        }
+
+        return { data: data.rows.map((d) => d.vessel_id), name: d.name };
+      } catch (err) {
+        logger.error('Error in statistics query', err);
+        throw err;
+      } finally {
+        if (client) {
+          client.release();
+        }
+      }
+    });
+    try {
+      const data: any = await Promise.all(queries);
+      ctx.body = data.reduce((ac, c) => {
+        return { ...ac, [c.name]: c.data };
+      }, {});
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   }
 
@@ -372,6 +431,13 @@ router.get(
   existDatasetV1,
   addDateRange,
   MVTRouter.getSampling,
+);
+
+router.get(
+  '/datasets/:dataset/interaction/:z/:x/:y/:cellColumn/:cellRow',
+  existDatasetV1,
+  addDateRange,
+  MVTRouter.getInteraction,
 );
 
 router.get('/:dataset/statistics/:z', existDataset, MVTRouter.getStatistics);
