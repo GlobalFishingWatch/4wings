@@ -212,18 +212,23 @@ class MVTRouter {
       y: parseInt(ctx.params.y, 10),
     };
     const pos = TileService.getPosByCoords(coords);
-    const cell = TileService.getCellByDatasetRowAndColumn(
-      ctx.state.dataset[0],
-      coords,
-      parseInt(ctx.params.cellColumn, 10),
-      parseInt(ctx.params.cellRow),
-    );
+    const rows = ctx.params.cellRow.split(',');
+    const cells = ctx.params.cellColumn.split(',').map((column, index) => {
+      return TileService.getCellByDatasetRowAndColumn(
+        ctx.state.dataset[0],
+        coords,
+        parseInt(column, 10),
+        parseInt(rows[index]),
+      );
+    });
 
     const queries = ctx.state.dataset.map(async (d, i) => {
       const query = `
       select distinct vessel_id
       from ${d.name}_z${ctx.params.z}
-      where pos = ${pos} and cell = ${cell}
+      where pos = ${pos} and ${cells
+        .map((cell) => `cell = ${cell}`)
+        .join(' and ')}
       ${
         ctx.state.filters && ctx.state.filters[i]
           ? `AND ${ctx.state.filters[i]}`
