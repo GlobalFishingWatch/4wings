@@ -226,16 +226,16 @@ class MVTRouter {
       const query = `
       select distinct vessel_id
       from ${d.name}_z${ctx.params.z}
-      where pos = ${pos} and ${cells
+      where pos = ${pos} and (${cells
         .map((cell) => `cell = ${cell}`)
-        .join(' and ')}
+        .join(' or ')})
       ${
         ctx.state.filters && ctx.state.filters[i]
           ? `AND ${ctx.state.filters[i]}`
           : ''
       }      
       `;
-
+      console.log(query);
       let client;
       try {
         client = await getClientByDataset(d);
