@@ -78,9 +78,6 @@ export class TileService {
     const numCellsLon = Math.ceil(
       (bounds.maxLon - bounds.minLon) / cellSizeLon,
     );
-    console.log('numCellsLon', numCellsLon);
-    console.log('cellColumn', cellColumn);
-    console.log('cellRow', cellRow);
 
     return numCellsLon * cellRow + cellColumn;
   }

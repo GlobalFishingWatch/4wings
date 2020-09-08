@@ -9,6 +9,7 @@ import { cache } from 'tile-server/middlewares/cache.middleware';
 import { cache as cacheV1 } from 'tile-server/middlewares/cache-v1.middleware';
 import * as zlib from 'zlib';
 import { TileService } from 'common/services/tile.service';
+import { addDateRange } from 'tile-server/middlewares/date-range.middleware';
 
 const router = new Router({
   prefix: '/v1',
@@ -383,19 +384,7 @@ class MVTRouter {
   }
 }
 
-async function addDateRange(ctx, next) {
-  if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
-    ctx.state.filters = ctx.state.filters.map((filter) => {
-      if (!filter) {
-        filter = ` timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
-      } else {
-        filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
-      }
-      return filter;
-    });
-  }
-  await next();
-}
+
 
 router.get(
   '/:dataset/tile/:type/:z/:x/:y',
