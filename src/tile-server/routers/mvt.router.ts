@@ -235,7 +235,7 @@ class MVTRouter {
           : ''
       }      
       `;
-      console.log(query);
+
       let client;
       try {
         client = await getClientByDataset(d);
