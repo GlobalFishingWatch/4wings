@@ -98,16 +98,13 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     ctx.set('cache-control', 'public, max-age=3600000');
     return;
   }
-  const yearOfCache = yearCache(
-    ctx.state.dataset[0],
-    ctx.state.dateRange,
-    ctx.query.interval,
-  );
 
+  // si es temporal agreggation true no hace falta el all o el año en las fechas. Chequear en el temporaalagregation true
+  // que este pidiendo todo el rango para ver si devuelve cache
   if (
     (ctx.state.dataset[0].name.includes('galapagos') ||
       ctx.state.dataset[0].name.includes('caribe')) &&
-    yearOfCache
+    !ctx.state.dateRange
   ) {
     const dataset = ctx.state.dataset[0];
     const bucket = dataset.cache.bucket;
@@ -132,6 +129,12 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
 
     return;
   }
+
+  const yearOfCache = yearCache(
+    ctx.state.dataset[0],
+    ctx.state.dateRange,
+    ctx.query.interval,
+  );
 
   if (
     !yearOfCache &&
