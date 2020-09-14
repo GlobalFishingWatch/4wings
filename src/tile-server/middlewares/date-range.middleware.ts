@@ -25,9 +25,9 @@ export async function addDateRange(ctx, next) {
         }
       } else {
         if (!filter) {
-          filter = ` timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+          filter = ` timestamp >= '${ctx.state.dateRange[0]}' and timestamp <= '${ctx.state.dateRange[1]}'`;
         } else {
-          filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+          filter += `and timestamp >= '${ctx.state.dateRange[0]}' and timestamp <= '${ctx.state.dateRange[1]}'`;
         }
       }
       return filter;
