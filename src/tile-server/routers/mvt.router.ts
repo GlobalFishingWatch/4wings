@@ -40,6 +40,7 @@ async function getClientByDataset(dataset) {
     if (dataset.target.database.port && process.env.NODE_ENV === 'dev') {
       connection.port = dataset.target.database.port;
     }
+
     pools[dataset.name] = new Pool(connection);
   }
 
@@ -298,16 +299,7 @@ class MVTRouter {
       x: parseInt(ctx.params.x, 10),
       y: parseInt(ctx.params.y, 10),
     };
-    if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
-      ctx.state.filters = ctx.state.filters.map((filter) => {
-        if (!filter) {
-          filter = `timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
-        } else {
-          filter += `and timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
-        }
-        return filter;
-      });
-    }
+
     const query = await TileService.generateQuery(
       coords,
       ctx.state.dataset,
@@ -392,6 +384,7 @@ router.get(
   '/:dataset/tile/:type/:z/:x/:y',
   existDataset,
   existType,
+  addDateRange,
   cache,
   MVTRouter.getTile,
 );
@@ -399,6 +392,7 @@ router.get(
   '/datasets/:dataset/tile/:type/:z/:x/:y',
   existDatasetV1,
   existType,
+  addDateRange,
   cacheV1,
   MVTRouter.getTile,
 );
