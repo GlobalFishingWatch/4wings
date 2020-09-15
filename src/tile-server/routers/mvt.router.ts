@@ -384,16 +384,16 @@ router.get(
   '/:dataset/tile/:type/:z/:x/:y',
   existDataset,
   existType,
-  addDateRange,
   cache,
+  addDateRange,
   MVTRouter.getTile,
 );
 router.get(
   '/datasets/:dataset/tile/:type/:z/:x/:y',
   existDatasetV1,
   existType,
-  addDateRange,
   cacheV1,
+  addDateRange,
   MVTRouter.getTile,
 );
 

@@ -49,20 +49,17 @@ function numFilters(filters) {
   return num;
 }
 
-function allDataFilters(dataset, filters) {
-  const checkStartDate = existTuple(
-    filters,
-    'timestamp',
-    '<=',
-    dataset.endDate,
-  );
-  const checkEndDate = existTuple(
-    filters,
-    'timestamp',
-    '>=',
-    dataset.startDate,
-  );
-  return checkEndDate && checkStartDate && numFilters(filters) === 2;
+function allDataFilters(dataset, dateRange, interval, temporalAggregation) {
+  const sameDates =
+    new Date(dataset.startDate).getTime() ===
+      new Date(dateRange[0]).getTime() &&
+    new Date(dataset.endDate).getTime() === new Date(dateRange[1]).getTime();
+  if (
+    sameDates &&
+    (!interval || interval === '10days' || temporalAggregation)
+  ) {
+    return true;
+  }
 }
 
 function yearCache(dataset, dateRange = [], interval) {
@@ -91,42 +88,13 @@ function yearCache(dataset, dateRange = [], interval) {
 export async function cache(ctx: Koa.ParameterizedContext, next) {
   if (
     (ctx.state.dataset && ctx.state.dataset.length > 1) ||
-    (ctx.state.filters && ctx.state.filters[0])
+    (ctx.state.filters && ctx.state.filters[0]) ||
+    ctx.state.temporalAggregation !==
+      ctx.state.dataset[0].heatmap.temporalAggregation
   ) {
     console.log('Not cache because several datasets');
     await next();
     ctx.set('cache-control', 'public, max-age=3600000');
-    return;
-  }
-
-  // si es temporal agreggation true no hace falta el all o el año en las fechas. Chequear en el temporaalagregation true
-  // que este pidiendo todo el rango para ver si devuelve cache
-  if (
-    (ctx.state.dataset[0].name.includes('galapagos') ||
-      ctx.state.dataset[0].name.includes('caribe')) &&
-    !ctx.state.dateRange
-  ) {
-    const dataset = ctx.state.dataset[0];
-    const bucket = dataset.cache.bucket;
-
-    let name = ctx.params.type;
-    if (ctx.params.type === 'heatmap' && ctx.query.format === 'intArray') {
-      name = 'intArray';
-    }
-    const url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
-      dataset.cache.dir ? `/${dataset.cache.dir}` : ''
-    }/${name}-${ctx.params.z}-${ctx.params.x}-${
-      ctx.params.y
-    }.pbf?rand=${Math.random()}`;
-    if (ctx.query.proxy && ctx.query.proxy === 'true') {
-      ctx.body = request({
-        uri: `https:${url}`,
-        method: 'GET',
-      });
-    } else {
-      ctx.redirect(url);
-    }
-
     return;
   }
 
@@ -135,9 +103,16 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     ctx.state.dateRange,
     ctx.query.interval,
   );
+  const allYears = allDataFilters(
+    ctx.state.dataset[0],
+    ctx.state.dateRange,
+    ctx.query.interval,
+    ctx.state.temporalAggregation,
+  );
 
   if (
     !yearOfCache &&
+    !allYears &&
     ctx.state.dateRange &&
     ctx.query.interval !== '10days' &&
     ctx.query.interval !== 'day'
@@ -177,7 +152,10 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
       url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
         dataset.cache.dir ? `/${dataset.cache.dir}` : ''
       }${
-        ctx.state.dataset[0].name !== 'carriers_v8_hd' ? '/all' : ''
+        ctx.state.dataset[0].name !== 'carriers_v8_hd' &&
+        !ctx.state.dataset[0].heatmap.temporalAggregation
+          ? '/all'
+          : ''
       }/${name}-${ctx.params.z}-${ctx.params.x}-${
         ctx.params.y
       }.pbf?rand=${Math.random()}`;
