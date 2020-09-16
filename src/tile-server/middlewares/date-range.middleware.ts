@@ -15,7 +15,7 @@ export async function addDateRange(ctx, next) {
               (ctx.state.dataset[index].heatmap.time * 1000),
           )}`;
         } else {
-          filter += `and htime >= ${Math.floor(
+          filter += ` and htime >= ${Math.floor(
             new Date(ctx.state.dateRange[0]).getTime() /
               (ctx.state.dataset[index].heatmap.time * 1000),
           )} and htime <= ${Math.floor(
@@ -27,7 +27,7 @@ export async function addDateRange(ctx, next) {
         if (!filter) {
           filter = ` timestamp >= '${ctx.state.dateRange[0]}' and timestamp <= '${ctx.state.dateRange[1]}'`;
         } else {
-          filter += `and timestamp >= '${ctx.state.dateRange[0]}' and timestamp <= '${ctx.state.dateRange[1]}'`;
+          filter += ` and timestamp >= '${ctx.state.dateRange[0]}' and timestamp <= '${ctx.state.dateRange[1]}'`;
         }
       }
       return filter;
