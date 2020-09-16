@@ -47,6 +47,7 @@ export default class BigQueryReader implements Reader {
   async getReadStream(): Promise<Readable> {
     logger.debug('Obtaining Bigquery stream');
     const query = await this.renderQuery();
+    console.log('query', query);
     return this.bigquery.createQueryStream(query).pipe(normalizeData);
   }
   async finish(): Promise<void> {

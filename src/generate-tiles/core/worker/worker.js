@@ -7,4 +7,8 @@ tsConfigPaths.register({
   baseUrl: tsConfig.compilerOptions.baseUrl,
   paths: tsConfig.compilerOptions.paths,
 });
-require(path.resolve(__dirname, './worker.ts'));
+try {
+  require(path.resolve(__dirname, './worker.ts'));
+} catch (err) {
+  console.error(err);
+}

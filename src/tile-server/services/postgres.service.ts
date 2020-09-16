@@ -27,11 +27,11 @@ export class PostgresService {
     }
     try {
       const res = await pool.query(
-        'select id, config, to_json(start_date) as start_date, to_json(end_date) as end_date from datasets where id=$1',
+        `select id, config, to_char(start_date, 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"') as start_date, to_char(end_date, 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"') as end_date from datasets where id=$1`,
         [id],
       );
       if (!res || !res.rows || res.rows.length === 0) {
-        return null
+        return null;
       }
       return {
         ...res.rows[0].config,

@@ -25,7 +25,7 @@ function generateTilesOfLevel(from: number, to: number) {
   return total;
 }
 
-async function removeGCSDir(options) {
+async function removeGCSDir(options, date) {
   logger.debug('Removing remote dir (GCS)');
   const storage = new Storage({
     projectId: options.cache.projectId,
@@ -34,19 +34,41 @@ async function removeGCSDir(options) {
   if (options.cache.dir) {
     optionsDel.prefix = `${options.cache.dir}/`;
   }
-  await storage.bucket(options.cache.bucket).deleteFiles(optionsDel);
+  if (options.cache.periods) {
+    for (let i = 0; i < options.cache.periods.length; i++) {
+      const period = options.cache.periods[i];
+      if (period === 'all') {
+        optionsDel.prefix = `${options.cache.dir}/${period}`;
+        continue;
+      } else if (period === 'yearly') {
+        optionsDel.prefix = `${
+          options.cache.dir
+        }/${period}/${date.getFullYear()}`;
+      }
+      logger.debug(`Removing ${optionsDel.prefix}`);
+      await storage.bucket(options.cache.bucket).deleteFiles(optionsDel);
+    }
+  } else {
+    await storage.bucket(options.cache.bucket).deleteFiles(optionsDel);
+  }
+
   logger.debug('Removed successfully');
 }
 
-export async function run(url: string, token: string) {
+export async function run(
+  url: string,
+  date: Date,
+  token: string,
+  overrideConfig,
+) {
   const pool = workerpool.pool(`${__dirname}/worker/worker.js`, {
-    maxWorkers: 2,
+    maxWorkers: 8,
   });
 
   logger.debug('Obtaining options');
   const options: any = await getOptions(url, token);
 
-  await removeGCSDir(options);
+  await removeGCSDir(options, date);
 
   if (options.heatmap && options.heatmap.cache) {
     logger.debug(
@@ -56,8 +78,9 @@ export async function run(url: string, token: string) {
       options.heatmap.fromLevelCache,
       options.heatmap.toLevelCache,
     );
+
     tiles.forEach((tile) => {
-      pool.exec('generateTileHeatmap', [options, tile]);
+      pool.exec('generateTileHeatmap', [options, new Date(date), tile]);
     });
   } else {
     logger.debug('Not cache for heatmap');

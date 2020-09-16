@@ -20,24 +20,31 @@ export class TileService {
     });
   }
 
+  static getPosByCoords(coords) {
+    return tile2Num(coords.z, coords.x, coords.y);
+  }
+
   static async generateQuery(
     coords,
     datasets,
     typeTile,
-    filters: any = null,
+    filters: any[] = null,
     temporalAggregation = false,
-    mode = null,
+    interval?,
   ) {
     // static async generateQuery(ctx: Koa.ParameterizedContext) {
     const pos = tile2Num(coords.z, coords.x, coords.y);
 
     return datasets.map((dataset, index) => {
       let query = '';
+      let htimeColumn = 'htime';
+      if (interval && dataset.heatmap.time !== interval) {
+        htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval}) as htime`;
+      }
       const type = dataset[typeTile];
       if (typeTile === 'heatmap') {
         query = `
-    select cell ${!temporalAggregation ? ',htime' : ''}
-    ${mode ? `,mode() WITHIN GROUP (ORDER BY ${mode}) as mode_${mode},` : ''}
+    select cell ${!temporalAggregation ? `,${htimeColumn}` : ''}
      ${
        type.columns.length > 0
          ? `,${type.columns
@@ -47,25 +54,32 @@ export class TileService {
      }
     from ${dataset.name}_z${coords.z}
     where pos = ${parseInt(pos, 10)}
-    ${
-      filters
-        ? `and ${filters}`
-        : ''
-    }
+    ${filters && filters[index] ? `and ${filters[index]}` : ''}
     group by 1${!temporalAggregation ? ',2' : ''}`;
       } else {
         query = `
     select htime, lat, lon ${type.columns ? `, ${type.columns.join(',')}` : ''}
     from ${dataset.name}_z${coords.z}
     where pos = ${parseInt(pos, 10)}
-    ${
-      filters
-        ? `and ${filters}`
-        : ''
-    }`;
+    ${filters && filters[index] ? `and ${filters[index]}` : ''}`;
       }
       return query;
     });
+  }
+
+  static getCellByDatasetRowAndColumn(dataset, coords, cellColumn, cellRow) {
+    let cellsByZoom = dataset.cellsByZoom;
+    const bounds = boundsFromTile(coords.z, coords.x, coords.y);
+
+    // cellsByZoom = cellsByZoom.map((v) => Math.sqrt(v) / 111320);
+
+    const cellSizeLon = Math.sqrt(cellsByZoom[coords.z]) / 111320;
+
+    const numCellsLon = Math.ceil(
+      (bounds.maxLon - bounds.minLon) / cellSizeLon,
+    );
+
+    return numCellsLon * cellRow + cellColumn;
   }
 
   static async generateHeatmapTile(
@@ -74,6 +88,7 @@ export class TileService {
     data,
     ctxState,
     format,
+    interval = null,
   ) {
     let cellsByZoom = datasets[0].cellsByZoom;
     const bounds = boundsFromTile(coords.z, coords.x, coords.y);
@@ -94,6 +109,7 @@ export class TileService {
     let results = new Array(numCellsLat * numCellsLon);
 
     data.forEach((d, index) => {
+      // let originalInterval = datasets[index].heatmap.time;
       d.rows.forEach((row) => {
         const cell = row.cell;
         if (!results[cell]) {
@@ -115,44 +131,49 @@ export class TileService {
         if (!isNaN(row.count)) {
           row.count = parseFloat(row.count);
         }
+        let rowHtime = row.htime;
+        // if (interval) {
+        //   rowHtime = Math.floor((rowHtime * originalInterval) / interval);
+        // }
         if (!ctxState.temporalAggregation) {
-          if (!results[cell][row.htime]) {
+          if (!results[cell][rowHtime]) {
             if (data.length > 1) {
-              results[cell][row.htime] = new Array(data.length).fill(0);
+              results[cell][rowHtime] = new Array(data.length).fill(0);
             } else {
-              results[cell][row.htime] = 0;
+              results[cell][rowHtime] = 0;
             }
           }
 
           if (data.length > 1) {
-            results[cell][row.htime][index] += row.count;
+            results[cell][rowHtime][index] += row.count * 100;
           } else {
-            results[cell][row.htime] += row.count;
+            results[cell][rowHtime] += row.count * 100;
             if (ctxState.mode) {
-              results[cell][`${row.htime}_${ctxState.mode}`] =
+              results[cell][`${rowHtime}_${ctxState.mode}`] =
                 row[`mode_${ctxState.mode}`];
             }
           }
         } else {
-          if (!results[cell].count) {
+          if (!results[cell].value) {
             if (data.length > 1) {
-              results[cell].count = new Array(data.length).fill(0);
+              results[cell].value = new Array(data.length).fill(0);
             } else {
-              results[cell].count = 0;
+              results[cell].value = 0;
             }
           }
           if (data.length > 1) {
-            results[cell].count[index] += row.count;
+            results[cell].value[index] += row.count * 100;
           } else {
-            results[cell].count += row.count;
+            results[cell].value += row.count * 100;
             if (ctxState.mode) {
-              results[cell].count[`${ctxState.mode}`] =
+              results[cell].value[`${ctxState.mode}`] =
                 row[`mode_${ctxState.mode}`];
             }
           }
         }
       });
     });
+
     if (format === 'intArray') {
       return await generateCustomPBF(
         datasets,
@@ -187,7 +208,7 @@ export class TileService {
       }
       const layer = datasets.map((d) => d.name).join(',');
 
-      return vtpbf.fromGeojsonVt({ [layer]: tile }, { version: 2 });
+      return vtpbf.fromGeojsonVt({ main: tile }, { version: 2 });
     }
   }
 

@@ -5,15 +5,16 @@ function printUsage() {
 Import command:
   Required arguments:
   --url=<Url of the config file>
+  --date=<Date to execute>
   Optional arguments:
   --token=<Auth token to obtain the config file> (optional)
   `);
 }
 
-export async function start(args) {
-  if (!args.url) {
+export async function start(args, overrideConfig) {
+  if (!args.url || !args.date) {
     printUsage();
     process.exit(1);
   }
-  await run(args.url, args.token);
+  await run(args.url, new Date(args.date), args.token, overrideConfig);
 }

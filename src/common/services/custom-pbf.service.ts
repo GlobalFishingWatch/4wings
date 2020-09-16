@@ -39,7 +39,7 @@ export async function generateCustomPBF(
       } else {
         featuresProps.push({
           cell,
-          count: el.count,
+          value: el.value,
         });
         let items = 2;
         if (ctxState.mode) {
@@ -58,7 +58,7 @@ export async function generateCustomPBF(
     data[index++] = el.cell;
     if (ctxState.temporalAggregation) {
       // console.log(el);
-      data[index++] = el.count;
+      data[index++] = el.value;
       if (ctxState.mode) {
         if (el.data[`${ctxState.mode}`] === undefined) {
           data[index++] = 0;
@@ -118,6 +118,7 @@ export async function generateCustomPBF(
       }
     }
   }
+
   const proto = await protobuf.load(`${__dirname}/../proto/tile.proto`);
   const protoTile = proto.lookupType('tile.Tile');
   const pbf = protoTile.encode(protoTile.create({ data })).finish();

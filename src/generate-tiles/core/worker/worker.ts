@@ -4,7 +4,7 @@ import { logger } from 'logger';
 import { Pool } from 'pg';
 import { Storage } from '@google-cloud/storage';
 import { PassThrough } from 'stream';
-import { writeFileSync } from 'fs';
+import { DateTime } from 'luxon';
 
 let pool = null;
 let storage = null;
@@ -33,47 +33,68 @@ function getPool(dataset) {
   return pool;
 }
 
-async function generateTileHeatmap(options, coords) {
+async function generateTileHeatmap(options, date, coords) {
   try {
-    const query = await TileService.generateQuery(
-      coords,
-      [options],
-      'heatmap',
-      undefined,
-      options.heatmap.temporalAggregation,
-    );
+    for (let i = 0; i < options.cache.periods.length; i++) {
+      const period = options.cache.periods[i];
+      logger.debug(`Generating cache for ${period}`);
 
-    const data = await getPool(options).query(query[0]);
-    if (!data || data.rows.length === 0) {
-      console.log('no-tile');
-      return;
+      let interval = null;
+      let filters = undefined;
+      if (period === 'yearly') {
+        interval = 86400;
+        const startDate = DateTime.utc(date.getFullYear()).startOf('year');
+
+        filters = `timestamp >= '${startDate.toISO()}' and timestamp <= '${startDate
+          .plus({ year: 1, days: 100 })
+          .toISO()}'`;
+      } else if (period === 'all') {
+        interval = 86400 * 10;
+      }
+
+      const query = await TileService.generateQuery(
+        coords,
+        [options],
+        'heatmap',
+        [filters],
+        options.heatmap.temporalAggregation,
+        interval,
+      );
+
+      const data = await getPool(options).query(query[0]);
+      if (!data || data.rows.length === 0) {
+        console.log('no-tile');
+        return;
+      }
+      logger.debug('Generating heatmap (mvt) tile');
+      let buff = await TileService.generateHeatmapTile(
+        [options],
+        coords,
+        [data],
+        { temporalAggregation: options.heatmap.temporalAggregation },
+        'heatmap',
+        interval,
+      );
+      await uploadGCSBuffer(options, 'heatmap', period, date, coords, buff);
+
+      logger.debug('Generating heatmap (intArray) tile');
+      buff = await TileService.generateHeatmapTile(
+        [options],
+        coords,
+        [data],
+        { temporalAggregation: options.heatmap.temporalAggregation },
+        'intArray',
+        interval,
+      );
+
+      await uploadGCSBuffer(options, 'intArray', period, date, coords, buff);
     }
-    logger.debug('Generating heatmap (mvt) tile');
-    let buff = await TileService.generateHeatmapTile(
-      [options],
-      coords,
-      [data],
-      { temporalAggregation: options.heatmap.temporalAggregation },
-      'heatmap',
-    );
-    await uploadGCSBuffer(options, 'heatmap', coords, buff);
-
-    logger.debug('Generating heatmap (intArray) tile');
-    buff = await TileService.generateHeatmapTile(
-      [options],
-      coords,
-      [data],
-      { temporalAggregation: options.heatmap.temporalAggregation },
-      'intArray',
-    );
-
-    await uploadGCSBuffer(options, 'intArray', coords, buff);
   } catch (err) {
     console.error(err);
   }
 }
 
-async function uploadGCSBuffer(options, name, coords, buffer) {
+async function uploadGCSBuffer(options, name, period, date, coords, buffer) {
   logger.debug('Uploading to gcs');
   const file = await TileService.zip(buffer);
   if (!storage) {
@@ -81,13 +102,17 @@ async function uploadGCSBuffer(options, name, coords, buffer) {
       projectId: options.target.projectId,
     });
   }
+  const filePath = `${
+    options.cache.dir
+      ? `${options.cache.dir}/${period}${
+          period === 'yearly' ? `/${date.getFullYear()}` : ''
+        }/`
+      : ''
+  }${name}-${coords.z}-${coords.x}-${coords.y}.pbf`;
+  logger.debug('Uploading to ' + filePath);
   const writeStream = storage
     .bucket(options.cache.bucket)
-    .file(
-      `${options.cache.dir ? `${options.cache.dir}/` : ''}${name}-${coords.z}-${
-        coords.x
-      }-${coords.y}.pbf`,
-    )
+    .file(filePath)
     .createWriteStream({
       metadata: {
         contentEncoding: 'gzip',
@@ -108,26 +133,30 @@ async function uploadGCSBuffer(options, name, coords, buffer) {
   logger.debug('Uploaded file to gcs');
 }
 
-async function generateTilePosition(options, coords) {
+async function generateTilePosition(options, date, coords) {
   try {
     logger.debug('Generating position tile');
-    const query = await TileService.generateQuery(
-      coords,
-      [options],
-      'position',
-    );
-    console.log('query', query);
-    const data = await getPool(options).query(query[0]);
-    if (!data || data.rows.length === 0) {
-      console.log('no-tile');
-      return;
+    for (let i = 0; i < options.cache.periods.length; i++) {
+      const period = options.cache.periods[i];
+      logger.debug(`Generating position cache for ${period}`);
+      const query = await TileService.generateQuery(
+        coords,
+        [options],
+        'position',
+      );
+
+      const data = await getPool(options).query(query[0]);
+      if (!data || data.rows.length === 0) {
+        console.log('no-tile');
+        return;
+      }
+      const buff = await TileService.generatePositionTile(
+        data.rows,
+        [options],
+        coords,
+      );
+      await uploadGCSBuffer(options, 'position', period, date, coords, buff);
     }
-    const buff = await TileService.generatePositionTile(
-      data.rows,
-      [options],
-      coords,
-    );
-    await uploadGCSBuffer(options, 'position', coords, buff);
   } catch (err) {
     console.error(err);
   }

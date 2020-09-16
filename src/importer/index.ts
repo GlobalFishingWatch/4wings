@@ -12,10 +12,10 @@ Import command:
   `);
 }
 
-export async function start(args) {
+export async function start(args, overrideConfig) {
   if (!args.url || !args.date || !args.period) {
     printUsage();
     process.exit(1);
   }
-  await run(args.url, args.date, args.period, args.token);
+  await run(args.url, args.date, args.period, args.token, overrideConfig);
 }

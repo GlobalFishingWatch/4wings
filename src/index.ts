@@ -8,19 +8,42 @@ function showHelp() {
   `);
 }
 
+function parseConfigArgs(args) {
+  const keys = Object.keys(args)
+    .filter((arg) => arg.startsWith('config.'))
+    .map((arg) => arg.replace(/config\./, ''));
+  const config = {};
+  for (let i = 0; i < keys.length; i++) {
+    const parts = keys[i].split('.');
+    let partialConfig = config;
+    for (let j = 0; j < parts.length; j++) {
+      if (!partialConfig[parts[j]]) {
+        partialConfig[parts[j]] = {};
+      }
+      if (j + 1 === parts.length) {
+        partialConfig[parts[j]] = args[`config.${keys[i]}`];
+      } else {
+        partialConfig = partialConfig[parts[j]];
+      }
+    }
+  }
+  return config;
+}
+
 async function init() {
   const configArgs = argsParser(process.argv);
+  const overrideConfig = parseConfigArgs(configArgs);
   let module: any;
   if (configArgs.import) {
     module = await import('./importer/index');
-    await module.start(configArgs);
+    await module.start(configArgs, overrideConfig);
     process.exit(0);
   } else if (configArgs['tile-server']) {
     module = await import('./tile-server/index');
-    await module.start(configArgs);
+    await module.start(configArgs, overrideConfig);
   } else if (configArgs['generate-tiles']) {
     module = await import('./generate-tiles/index');
-    await module.start(configArgs);
+    await module.start(configArgs, overrideConfig);
     process.exit(0);
   } else {
     showHelp();

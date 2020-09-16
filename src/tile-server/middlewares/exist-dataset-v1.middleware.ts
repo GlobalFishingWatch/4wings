@@ -33,30 +33,43 @@ function checkFilterFieldsInDataset(dataset, filters) {
 
 export async function existDataset(ctx, next) {
   const datasets = ctx.params.dataset.split(',');
-  try {
-    if (ctx.query.filters && ctx.query.filters.trim()) {
-      ctx.state.filters = parser.parse(ctx.query.filters);
-    }
-  } catch (err) {
-    ctx.throw(400, 'Incorrect filters');
+  ctx.state.filters = new Array(datasets.length);
+  if (ctx.query['date-range']) {
+    ctx.state.dateRange = ctx.query['date-range'].split(',');
+  } else {
+    ctx.state.dateRange = [];
   }
-
   ctx.state.dataset = await Promise.all(
-    datasets.map(async (d) => {
+    datasets.map(async (d, i) => {
+      let parsedFilters;
+      let filters;
+      // if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
+      //   filters = `timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
+      // }
+      try {
+        if (ctx.query[`filters[${i}]`] && ctx.query[`filters[${i}]`].trim()) {
+          filters = ` ${ctx.query[`filters[${i}]`].trim()}`;
+
+          parsedFilters = parser.parse(filters);
+        }
+      } catch (err) {
+        ctx.throw(400, 'Incorrect filters');
+      }
       const dataset = await PostgresService.getDatasetById(d);
       if (!dataset) {
         ctx.throw(404, 'Dataset not found');
         return;
       }
-      if (ctx.state.filters) {
+      if (parsedFilters) {
         try {
-          checkFilterFieldsInDataset(dataset, ctx.state.filters);
+          checkFilterFieldsInDataset(dataset, parsedFilters);
         } catch (err) {
           ctx.throw(400, err.message);
           return;
         }
       }
 
+      ctx.state.filters[i] = filters;
       if (ctx.query.interval) {
         let interval = null;
         if (ctx.query.interval === 'day') {

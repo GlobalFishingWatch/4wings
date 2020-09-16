@@ -6,10 +6,12 @@ import * as Helmet from 'koa-helmet';
 import * as Cors from '@koa/cors';
 import * as Compress from 'koa-compress';
 import * as Views from 'koa-views';
+import * as Static from 'koa-static';
 
 import mvtRouter from './routers/mvt.router';
+import statsRouter from './routers/stats.router';
 
-export async function start(args) {
+export async function start(args, overrideConfig) {
   const app = new Koa();
   if (process.env.NODE_ENV !== 'pro') {
     app.use(Logger());
@@ -21,7 +23,7 @@ export async function start(args) {
       },
     }),
   );
-
+  app.use(Static(__dirname + '/html/static'));
   app.use(
     Mount('/map', async (ctx) => {
       const ids = await PostgresService.getAllDatasetIds();
@@ -38,9 +40,10 @@ export async function start(args) {
   );
 
   app.use(mvtRouter.routes()).use(mvtRouter.allowedMethods());
+  app.use(statsRouter.routes()).use(statsRouter.allowedMethods());
 
-  const server = app.listen(process.env.PORT || 3000, () => {
-    console.log(`Running mvt tile server in port ${process.env.PORT || 3000}`);
+  const server = app.listen(process.env.PORT || 5000, () => {
+    console.log(`Running mvt tile server in port ${process.env.PORT || 5000}`);
   });
   server.setTimeout(900000);
 }

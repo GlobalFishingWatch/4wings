@@ -67,6 +67,11 @@
         <option value="<%=ids[i]%>-heatmap"><%=ids[i]%> - heatmap</option>
         <% } %>
       </select>
+      <select id="date">
+        <% for (let i = 15369; i < 15992; i++) { %>
+        <option value="<%=i%>"><%=i%></option>
+        <% } %>
+      </select>
     </div>
     <button id="button">Play</button>
     <div class="statistics-panel">
@@ -118,6 +123,37 @@
           addFilter(++initialValue);
         }, 1000);
       });
+      var selectedDate = 15369;
+      function setDate(ev) {
+        var date = this.value;
+        setFilter('main', date);
+        selectedDate = date;
+      }
+      function setFilter(layer, value) {
+        map.setFilter(layer, ['has', value + '']);
+        map.setPaintProperty(layer, 'fill-color', getColor(value));
+      }
+      var DEFAULT_BASEMAP_COLOR = '#002457';
+      function getColor(value) {
+        return [
+          'interpolate',
+          ['linear'],
+          ['to-number', ['get', value + '']],
+          0,
+          DEFAULT_BASEMAP_COLOR,
+          6,
+          '#163F89',
+          12,
+          '#0F6F97',
+          18,
+          '#07BBAE',
+          24,
+          '#00FFC3',
+          30,
+          '#FFFFFF',
+        ];
+      }
+      document.getElementById('date').addEventListener('change', setDate);
       var selectedLayer = null;
 
       function addLayer(target, layer) {
@@ -145,17 +181,17 @@
               window.location.protocol +
                 '//' +
                 window.location.host +
-                '/v1/' +
+                '/v1/datasets/' +
                 parts.slice(0, parts.length - 1).join('-') +
                 '/tile/' +
                 parts[1] +
-                `/{z}/{x}/{y}?${filters}`,
+                `/{z}/{x}/{y}?interval=10days${filters}`,
             ],
           },
-          'source-layer': parts[0],
+          'source-layer': parts.slice(0, parts.length - 1).join('-'),
           type: 'fill',
           paint: {
-            'fill-color': 'red',
+            'fill-color': '#ff0000',
           },
         };
 
@@ -196,6 +232,7 @@
 
         console.log(layerCfg);
         layer = map.addLayer(layerCfg);
+        // setFilter('main', selectedDate);
 
         loadZoom();
       }
@@ -247,9 +284,10 @@
         container: 'map', // container id
         style: 'mapbox://styles/mapbox/dark-v10', // stylesheet location
         center: [-3.6694335937500004, 40.455307212131494], // starting position [lng, lat]
-        zoom: 3, // starting zoom
+        zoom: 0, // starting zoom
         minZoom: 0,
-        maxZoom: 12,
+        maxZoom: 8,
+        hash: true,
       });
       map.showTileBoundaries = true;
       map.on('zoom', () => {
@@ -266,7 +304,7 @@
               tiles: [
                 'https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt',
               ],
-              minzoom: 6,
+              minzoom: 14,
               maxzoom: 14,
             },
 
@@ -288,8 +326,15 @@
 
         map.on('click', 'main', function (e) {
           console.log(e.features[0]);
+          console.log(
+            'value for ' +
+              selectedDate +
+              ' = ' +
+              e.features[0].properties[selectedDate],
+          );
           const properties = e.features[0].properties;
-          var coordinates = e.features[0].geometry.coordinates.slice();
+
+          var coordinates = e.features[0].geometry.coordinates.slice()[0][0];
           const keys = Object.keys(properties).filter((c) => c !== 'cell');
 
           const html = keys.map(
@@ -297,7 +342,8 @@
           );
           var description = `<p>Position:
             <ul>
-              ${html.join('')}              
+              
+              <li>${JSON.stringify(e.features[0].properties)}</li>
             </ul>
             </p>`;
 
