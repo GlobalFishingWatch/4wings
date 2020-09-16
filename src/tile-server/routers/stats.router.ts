@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import { existDataset } from 'tile-server/middlewares/exist-dataset-v1.middleware';
 import { logger } from 'logger';
 import { addDateRange } from 'tile-server/middlewares/date-range.middleware';
+import * as request from 'request';
 
 const router = new Router({
   prefix: '/v1',
@@ -85,7 +86,16 @@ class StatsRouter {
       const url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
         dataset.cache.dir ? `/${dataset.cache.dir}` : ''
       }/statistics.json`;
-      ctx.redirect(url);
+
+      if (ctx.query.proxy && ctx.query.proxy === 'true') {
+        ctx.body = request({
+          uri: `https:${url}`,
+          method: 'GET',
+        });
+      } else {
+        ctx.redirect(url);
+      }
+
       return;
     }
   }
