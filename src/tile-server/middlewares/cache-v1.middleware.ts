@@ -50,6 +50,9 @@ function numFilters(filters) {
 }
 
 function allDataFilters(dataset, dateRange, interval, temporalAggregation) {
+  if (!dateRange[0] && !dateRange[1]) {
+    return true;
+  }
   const sameDates =
     new Date(dataset.startDate).getTime() ===
       new Date(dateRange[0]).getTime() &&

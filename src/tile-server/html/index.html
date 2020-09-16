@@ -185,10 +185,11 @@
                 parts.slice(0, parts.length - 1).join('-') +
                 '/tile/' +
                 parts[1] +
-                `/{z}/{x}/{y}?interval=10days${filters}`,
+                `/{z}/{x}/{y}?proxy=true${filters}`,
+              // 'https://storage.googleapis.com/raul-tiles-scratch-60ttl/dgg_salinity_caribe/heatmap-{z}-{x}-{y}.pbf',
             ],
           },
-          'source-layer': parts.slice(0, parts.length - 1).join('-'),
+          'source-layer': 'main',
           type: 'fill',
           paint: {
             'fill-color': '#ff0000',
@@ -288,6 +289,16 @@
         minZoom: 0,
         maxZoom: 8,
         hash: true,
+        // transformRequest: (url, resourceType) => {
+        //   if (resourceType == 'Tile' && url.includes('datasets')) {
+        //     console.log('url', url);
+        //     return {
+        //       url: url,
+        //       origin: 'http://localhost:5000',
+        //       headers: { Authorization: 'Bearer adsfa' },
+        //     };
+        //   }
+        // },
       });
       map.showTileBoundaries = true;
       map.on('zoom', () => {
@@ -326,35 +337,8 @@
 
         map.on('click', 'main', function (e) {
           console.log(e.features[0]);
-          console.log(
-            'value for ' +
-              selectedDate +
-              ' = ' +
-              e.features[0].properties[selectedDate],
-          );
-          const properties = e.features[0].properties;
-
-          var coordinates = e.features[0].geometry.coordinates.slice()[0][0];
-          const keys = Object.keys(properties).filter((c) => c !== 'cell');
-
-          const html = keys.map(
-            (k) => `<li>${k}:${e.features[0].properties[k]}</li>`,
-          );
-          var description = `<p>Position:
-            <ul>
-              
-              <li>${JSON.stringify(e.features[0].properties)}</li>
-            </ul>
-            </p>`;
-
-          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-          }
-
-          new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(description)
-            .addTo(map);
+          debugger;
+          const coords = e.features[0]._vectorTileFeature;
         });
 
         map.on('mouseenter', 'main', function () {
