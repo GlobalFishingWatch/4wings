@@ -26,7 +26,7 @@ export class TileService {
 
   static async generateQuery(
     coords,
-    datasets,
+    datasetGroups,
     typeTile,
     filters: any[] = null,
     temporalAggregation = false,
@@ -35,34 +35,42 @@ export class TileService {
     // static async generateQuery(ctx: Koa.ParameterizedContext) {
     const pos = tile2Num(coords.z, coords.x, coords.y);
 
-    return datasets.map((dataset, index) => {
-      let query = '';
-      let htimeColumn = 'htime';
-      if (interval && dataset.heatmap.time !== interval) {
-        htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval}) as htime`;
-      }
-      const type = dataset[typeTile];
-      if (typeTile === 'heatmap') {
-        query = `
-    select cell ${!temporalAggregation ? `,${htimeColumn}` : ''}
-     ${
-       type.columns.length > 0
-         ? `,${type.columns
-             .map((h) => `${h.func}(${h.column}) as ${h.alias}`)
-             .join(',')}`
-         : ''
-     }
-    from ${dataset.name}_z${coords.z}
-    where pos = ${parseInt(pos, 10)}
-    ${filters && filters[index] ? `and ${filters[index]}` : ''}
-    group by 1${!temporalAggregation ? ',2' : ''}`;
-      } else {
-        query = `
-    select htime, lat, lon ${type.columns ? `, ${type.columns.join(',')}` : ''}
-    from ${dataset.name}_z${coords.z}
-    where pos = ${parseInt(pos, 10)}
-    ${filters && filters[index] ? `and ${filters[index]}` : ''}`;
-      }
+    return datasetGroups.map((group, index) => {
+      const query = group
+        .map((dataset) => {
+          console.log(filters[index]);
+          let query = '';
+          let htimeColumn = 'htime';
+          if (interval && dataset.heatmap.time !== interval) {
+            htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval}) as htime`;
+          }
+          const type = dataset[typeTile];
+          if (typeTile === 'heatmap') {
+            query = `
+            select cell ${!temporalAggregation ? `,${htimeColumn}` : ''}
+            ${
+              type.columns.length > 0
+                ? `,${type.columns
+                    .map((h) => `${h.func}(${h.column}) as ${h.alias}`)
+                    .join(',')}`
+                : ''
+            }
+            from ${dataset.name}_z${coords.z}
+            where pos = ${parseInt(pos, 10)}
+            ${filters && filters[index] ? `and ${filters[index]}` : ''}
+            group by 1${!temporalAggregation ? ',2' : ''}`;
+          } else {
+            query = `
+            select htime, lat, lon ${
+              type.columns ? `, ${type.columns.join(',')}` : ''
+            }
+            from ${dataset.name}_z${coords.z}
+            where pos = ${parseInt(pos, 10)}
+            ${filters && filters[index] ? `and ${filters[index]}` : ''}`;
+          }
+          return query;
+        })
+        .join(' union all ');
       return query;
     });
   }
@@ -83,14 +91,14 @@ export class TileService {
   }
 
   static async generateHeatmapTile(
-    datasets: any[],
+    groups: any[],
     coords,
     data,
     ctxState,
     format,
     interval = null,
   ) {
-    let cellsByZoom = datasets[0].cellsByZoom;
+    let cellsByZoom = groups[0][0].cellsByZoom;
     const bounds = boundsFromTile(coords.z, coords.x, coords.y);
 
     cellsByZoom = cellsByZoom.map((v) => Math.sqrt(v) / 111320);
@@ -176,7 +184,7 @@ export class TileService {
 
     if (format === 'intArray') {
       return await generateCustomPBF(
-        datasets,
+        groups,
         ctxState,
         results,
         numCellsLat,
@@ -206,7 +214,6 @@ export class TileService {
         // console.log('no tile');
         return;
       }
-      const layer = datasets.map((d) => d.name).join(',');
 
       return vtpbf.fromGeojsonVt({ main: tile }, { version: 2 });
     }

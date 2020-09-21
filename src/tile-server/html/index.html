@@ -181,11 +181,10 @@
               window.location.protocol +
                 '//' +
                 window.location.host +
-                '/v1/datasets/' +
-                parts.slice(0, parts.length - 1).join('-') +
+                '/v1/datasets' +
                 '/tile/' +
                 parts[1] +
-                `/{z}/{x}/{y}?proxy=true${filters}`,
+                `/{z}/{x}/{y}?datasets[0]=${parts[0]}`,
               // 'https://storage.googleapis.com/raul-tiles-scratch-60ttl/dgg_salinity_caribe/heatmap-{z}-{x}-{y}.pbf',
             ],
           },

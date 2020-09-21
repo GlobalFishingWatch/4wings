@@ -31,75 +31,100 @@ function checkFilterFieldsInDataset(dataset, filters) {
   }
 }
 
+function parseDatasets(ctx) {
+  const keys = Object.keys(ctx.query).filter((key) =>
+    key.startsWith('datasets'),
+  );
+  const datasets = new Array(keys.length);
+  keys.forEach((k) => {
+    const indexRegex = /datasets\[(?<index>[0-9]+)\]/gi;
+    const resultRegex = indexRegex.exec(k);
+    if (resultRegex.groups && resultRegex.groups.index) {
+      datasets[parseInt(resultRegex.groups.index, 10)] = ctx.query[k].split(
+        ',',
+      );
+    }
+  });
+  return datasets;
+}
+
+function parseFilters(ctx) {
+  const keys = Object.keys(ctx.query).filter((key) =>
+    key.startsWith('filters'),
+  );
+  const datasets = new Array(keys.length);
+  keys.forEach((k) => {
+    const indexRegex = /filters\[(?<index>[0-9]+)\]/gi;
+    const resultRegex = indexRegex.exec(k);
+    if (resultRegex.groups && resultRegex.groups.index) {
+      datasets[parseInt(resultRegex.groups.index, 10)] = ctx.query[k].trim();
+    }
+  });
+  return datasets;
+}
+
 export async function existDataset(ctx, next) {
-  const datasets = ctx.params.dataset.split(',');
-  ctx.state.filters = new Array(datasets.length);
+  const datasetIdGroups = parseDatasets(ctx);
+  const filters = parseFilters(ctx);
+  const parsedFilters = filters.map((f) => parser.parse(f));
+  ctx.state.filters = filters;
   if (ctx.query['date-range']) {
     ctx.state.dateRange = ctx.query['date-range'].split(',');
   } else {
     ctx.state.dateRange = [];
   }
-  ctx.state.dataset = await Promise.all(
-    datasets.map(async (d, i) => {
-      let parsedFilters;
-      let filters;
-      // if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
-      //   filters = `timestamp > '${ctx.state.dateRange[0]}' and timestamp < '${ctx.state.dateRange[1]}'`;
-      // }
-      try {
-        if (ctx.query[`filters[${i}]`] && ctx.query[`filters[${i}]`].trim()) {
-          filters = ` ${ctx.query[`filters[${i}]`].trim()}`;
+  ctx.state.datasetGroups = new Array(datasetIdGroups.length);
+  for (let i = 0; i < datasetIdGroups.length; i++) {
+    const group = datasetIdGroups[i];
+    try {
+      const datasetGroup = await Promise.all(
+        group.map(async (d) => {
+          const dataset = await PostgresService.getDatasetById(d);
+          if (!dataset) {
+            throw new Error('Dataset not found');
+            return;
+          }
+          if (parsedFilters[i]) {
+            checkFilterFieldsInDataset(dataset, parsedFilters[i]);
+          }
 
-          parsedFilters = parser.parse(filters);
-        }
-      } catch (err) {
-        ctx.throw(400, 'Incorrect filters');
-      }
-      const dataset = await PostgresService.getDatasetById(d);
-      if (!dataset) {
-        ctx.throw(404, 'Dataset not found');
-        return;
-      }
-      if (parsedFilters) {
-        try {
-          checkFilterFieldsInDataset(dataset, parsedFilters);
-        } catch (err) {
-          ctx.throw(400, err.message);
-          return;
-        }
-      }
+          if (ctx.query.interval) {
+            let interval = null;
+            if (ctx.query.interval === 'day') {
+              interval = 86400;
+            } else if (ctx.query.interval === '10days') {
+              interval = 86400 * 10;
+            } else if (ctx.query.interval === 'hour') {
+              interval = 3600;
+            } else {
+              ctx.throw(400, 'Interval selected not allowed');
+              return;
+            }
 
-      ctx.state.filters[i] = filters;
-      if (ctx.query.interval) {
-        let interval = null;
-        if (ctx.query.interval === 'day') {
-          interval = 86400;
-        } else if (ctx.query.interval === '10days') {
-          interval = 86400 * 10;
-        } else if (ctx.query.interval === 'hour') {
-          interval = 3600;
-        } else {
-          ctx.throw(400, 'Interval selected not allowed');
-          return;
-        }
-
-        if (dataset.heatmap.time && dataset.heatmap.time > interval) {
-          ctx.throw(400, 'Interval selected lower than original');
-          return;
-        }
-        ctx.state.interval = interval;
-      }
-      ctx.state.temporalAggregation = dataset.heatmap.temporalAggregation;
-      if (ctx.query['temporal-aggregation'] !== undefined) {
-        if (ctx.query['temporal-aggregation'] === 'true') {
-          ctx.state.temporalAggregation = true;
-        } else {
-          ctx.state.temporalAggregation = false;
-        }
-      }
-      return dataset;
-    }),
-  );
+            if (dataset.heatmap.time && dataset.heatmap.time > interval) {
+              ctx.throw(400, 'Interval selected lower than original');
+              return;
+            }
+            ctx.state.interval = interval;
+          }
+          ctx.state.temporalAggregation = dataset.heatmap.temporalAggregation;
+          if (ctx.query['temporal-aggregation'] !== undefined) {
+            if (ctx.query['temporal-aggregation'] === 'true') {
+              ctx.state.temporalAggregation = true;
+            } else {
+              ctx.state.temporalAggregation = false;
+            }
+          }
+          return dataset;
+        }),
+      );
+      ctx.state.datasetGroups[i] = datasetGroup;
+    } catch (err) {
+      console.error(err);
+      ctx.throw(400, err.message);
+      return;
+    }
+  }
 
   await next();
 }
