@@ -59,20 +59,6 @@ export async function generateCustomPBF(
     if (ctxState.temporalAggregation) {
       // console.log(el);
       data[index++] = el.value;
-      if (ctxState.mode) {
-        if (el.data[`${ctxState.mode}`] === undefined) {
-          data[index++] = 0;
-        } else {
-          if (ctxState.mode.toLowerCase() === 'flag') {
-            data[index++] = parseInt(
-              byAlpha3[el.data[`${ctxState.mode}`]].numeric,
-              10,
-            );
-          } else {
-            results[index++] = el.data[`${ctxState.mode}`];
-          }
-        }
-      }
     } else {
       data[index++] = el.min;
       data[index++] = el.max;
@@ -98,21 +84,6 @@ export async function generateCustomPBF(
           for (let j = 0; j < numDatasets; j++) {
             const value = el.data[i.toString()] ? el.data[i.toString()][j] : 0;
             data[index++] = value;
-            if (ctxState.mode) {
-              if (el.data[`${i.toString()}_${ctxState.mode}`] === undefined) {
-                data[index++] = 0;
-              } else {
-                if (ctxState.mode.toLowerCase() === 'flag') {
-                  results[index++] = parseInt(
-                    byAlpha3[el.data[`${i.toString()}_${ctxState.mode}`][j]],
-                    10,
-                  );
-                } else {
-                  results[index++] =
-                    el.data[`${i.toString()}_${ctxState.mode}`][j];
-                }
-              }
-            }
           }
         }
       }

@@ -40,7 +40,6 @@ async function getClientByDataset(dataset) {
     if (dataset.target.database.port && process.env.NODE_ENV === 'dev') {
       connection.port = dataset.target.database.port;
     }
-
     pools[dataset.name] = new Pool(connection);
   }
 
@@ -52,38 +51,58 @@ class MVTRouter {
     ctx: Koa.ParameterizedContext,
     zoom: number,
   ) {
-    const queries = ctx.state.dataset.map(async (d, i) => {
-      const type = d.heatmap;
-      const statisticsQuery = `
-      select max(sub.count) as max, min(sub.count) as min, avg(sub.count) as avg, percentile_cont(0.5) within group (order by sub.count) as median  from (select ${type.columns
-        .filter((h) => h.alias === 'count')
-        .map((h) => `${h.func}(${h.column}) as count`)
-        .join(',')}
-      from ${d.name}_z${zoom}
-      ${
-        ctx.state.filters && ctx.state.filters[i]
-          ? `WHERE ${ctx.state.filters[i]}`
-          : ''
-      }
-      group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}) sub
+    const queries = ctx.state.datasetGroups.map(async (group, i) => {
+      const datasetsQuery = group.map((d) => {
+        const type = d.heatmap;
+        const statisticsQuery = `
+          select 
+            max(sub.count) as max, 
+            min(sub.count) as min, 
+            avg(sub.count) as avg
+          from (
+          select ${type.columns
+            .filter((h) => h.alias === 'count')
+            .map((h) => `${h.func}(${h.column}) as count`)
+            .join(',')}
+          from ${d.name}_z${zoom}
+          ${
+            ctx.state.filters && ctx.state.filters[i]
+              ? `WHERE ${ctx.state.filters[i]}`
+              : ''
+          }
+          group by pos, cell${
+            !ctx.state.temporalAggregation ? ',htime' : ''
+          }) sub
+      `;
+        return statisticsQuery;
+      });
+
+      const finalQuery = `
+      with total as (${datasetsQuery.join(' union all ')})
+      
+      select 
+        sum(max) as max, 
+        sum(min) as min, 
+        sum(avg) as avg
+        from total  
       `;
 
       let client;
       try {
-        client = await getClientByDataset(d);
-        const data = await client.query(statisticsQuery);
+        client = await getClientByDataset(group[0]);
+        const data = await client.query(finalQuery);
         if (!data || !data.rows || data.rows.length === 0) {
           console.log('Error obtaining statistics');
-          return { name: d.name, data: null };
+          return { name: group.map((d) => d.name).join(','), data: null };
         }
         Object.keys(data.rows[0]).forEach(
           (k) => (data.rows[0][k] = parseFloat(data.rows[0][k])),
         );
         return {
-          name: d.name,
+          name: group.map((d) => d.name).join(','),
           data: data.rows[0],
-          startDate: d.startDate,
-          endDate: d.endDate,
+          startDate: group[0].startDate,
+          endDate: group[0].endDate,
         };
       } catch (err) {
         logger.error('Error in statistics query', err);
@@ -102,9 +121,9 @@ class MVTRouter {
       }
       if (data.length === 1) {
         const body = data[0].data;
-        body.area = ctx.state.dataset[0].cellsByZoom[zoom];
-        body.startDate = ctx.state.dataset[0].startDate;
-        body.endDate = ctx.state.dataset[0].endDate;
+        body.area = ctx.state.datasetGroups[0][0].cellsByZoom[zoom];
+        body.startDate = ctx.state.datasetGroups[0][0].startDate;
+        body.endDate = ctx.state.datasetGroups[0][0].endDate;
 
         return body;
       } else {
@@ -113,7 +132,7 @@ class MVTRouter {
           return p;
         }, {});
 
-        body.area = ctx.state.dataset[0].cellsByZoom[zoom];
+        body.area = ctx.state.datasetGroups[0][0].cellsByZoom[zoom];
         return body;
       }
     } catch (err) {
@@ -123,34 +142,41 @@ class MVTRouter {
   }
 
   static async getSamplingByZoom(ctx: Koa.ParameterizedContext, zoom: number) {
-    const queries = ctx.state.dataset.map(async (d, i) => {
-      const type = d.heatmap;
-      const statisticsQuery = `
-
-      with total as (select ${type.columns
-        .filter((h) => h.alias === 'count')
-        .map((h) => `${h.func}(${h.column}) as count`)
-        .join(',')}
-      from ${d.name}_z${zoom} 
-      ${ctx.state.filters[i] ? `WHERE ${ctx.state.filters[i]}` : ''}
-      group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''})
-
-      select  count  from total limit 1000 
+    const queries = ctx.state.datasetGroups.map(async (group, i) => {
+      const datasetsQuery = group.map((d) => {
+        const type = d.heatmap;
+        const statisticsQuery = `          
+          select ${type.columns
+            .filter((h) => h.alias === 'count')
+            .map((h) => `${h.func}(${h.column}) as count`)
+            .join(',')}
+          from ${d.name}_z${zoom}
+          ${
+            ctx.state.filters && ctx.state.filters[i]
+              ? `WHERE ${ctx.state.filters[i]}`
+              : ''
+          }
+          group by pos, cell${!ctx.state.temporalAggregation ? ',htime' : ''}
       `;
-      console.log(statisticsQuery);
+        return statisticsQuery;
+      });
+
+      const finalQuery = datasetsQuery.join(' union all ');
+
+      console.log(finalQuery);
       let client;
       try {
-        client = await getClientByDataset(d);
-        const data = await client.query(statisticsQuery);
+        client = await getClientByDataset(group[0]);
+        const data = await client.query(finalQuery);
         if (!data || !data.rows || data.rows.length === 0) {
           console.log('Error obtaining statistics');
-          return { name: d.name, data: null };
+          return { name: group.map((d) => d.name).join(','), data: null };
         }
         Object.keys(data.rows[0]).forEach(
           (k) => (data.rows[0][k] = parseFloat(data.rows[0][k])),
         );
         return {
-          name: d.name,
+          name: group.map((d) => d.name).join(','),
           data: data.rows.map((r) => r.count),
         };
       } catch (err) {
@@ -171,9 +197,9 @@ class MVTRouter {
       ctx.body = data;
       if (data.length === 1) {
         const body = data[0].data;
-        body.area = ctx.state.dataset[0].cellsByZoom[zoom];
-        body.startDate = ctx.state.dataset[0].startDate;
-        body.endDate = ctx.state.dataset[0].endDate;
+        body.area = ctx.state.datasetGroups[0][0].cellsByZoom[zoom];
+        body.startDate = ctx.state.datasetGroups[0][0].startDate;
+        body.endDate = ctx.state.datasetGroups[0][0].endDate;
 
         return body;
       } else {
@@ -182,7 +208,7 @@ class MVTRouter {
           return p;
         }, {});
 
-        body.area = ctx.state.dataset[0].cellsByZoom[zoom];
+        body.area = ctx.state.datasetGroups[0][0].cellsByZoom[zoom];
         return body;
       }
     } catch (err) {
@@ -221,45 +247,48 @@ class MVTRouter {
     const rows = ctx.params.cellRow.split(',');
     const cells = ctx.params.cellColumn.split(',').map((column, index) => {
       return TileService.getCellByDatasetRowAndColumn(
-        ctx.state.dataset[0],
+        ctx.state.datasetGroups[0][0],
         coords,
         parseInt(column, 10),
         parseInt(rows[index]),
       );
     });
+    let queries = [];
+    ctx.state.datasetGroups.forEach(async (group, i) => {
+      const groupQueries = group.map(async (d) => {
+        const query = `
+          select distinct vessel_id
+          from ${d.name}_z${ctx.params.z}
+          where pos = ${pos} and (${cells
+          .map((cell) => `cell = ${cell}`)
+          .join(' or ')})
+          ${
+            ctx.state.filters && ctx.state.filters[i]
+              ? `AND ${ctx.state.filters[i]}`
+              : ''
+          }      
+        `;
+        console.log(query);
+        let client;
+        try {
+          client = await getClientByDataset(d);
+          const data = await client.query(query);
+          if (!data || !data.rows || data.rows.length === 0) {
+            console.log('Error obtaining statistics');
+            return { name: d.name, data: null };
+          }
 
-    const queries = ctx.state.dataset.map(async (d, i) => {
-      const query = `
-      select distinct vessel_id
-      from ${d.name}_z${ctx.params.z}
-      where pos = ${pos} and (${cells
-        .map((cell) => `cell = ${cell}`)
-        .join(' or ')})
-      ${
-        ctx.state.filters && ctx.state.filters[i]
-          ? `AND ${ctx.state.filters[i]}`
-          : ''
-      }      
-      `;
-
-      let client;
-      try {
-        client = await getClientByDataset(d);
-        const data = await client.query(query);
-        if (!data || !data.rows || data.rows.length === 0) {
-          console.log('Error obtaining statistics');
-          return { name: d.name, data: null };
+          return { data: data.rows.map((d) => d.vessel_id), name: d.name };
+        } catch (err) {
+          logger.error('Error in statistics query', err);
+          throw err;
+        } finally {
+          if (client) {
+            client.release();
+          }
         }
-
-        return { data: data.rows.map((d) => d.vessel_id), name: d.name };
-      } catch (err) {
-        logger.error('Error in statistics query', err);
-        throw err;
-      } finally {
-        if (client) {
-          client.release();
-        }
-      }
+      });
+      queries = queries.concat(groupQueries);
     });
     try {
       const data: any = await Promise.all(queries);
@@ -302,7 +331,7 @@ class MVTRouter {
 
     const query = await TileService.generateQuery(
       coords,
-      ctx.state.dataset,
+      ctx.state.datasetGroups,
       ctx.params.type,
       Array.isArray(ctx.state.filters)
         ? ctx.state.filters
@@ -311,10 +340,10 @@ class MVTRouter {
       ctx.state.interval,
     );
     console.log(query);
-    const promises = ctx.state.dataset.map(async (d, i) => {
+    const promises = ctx.state.datasetGroups.map(async (group, i) => {
       let client;
       try {
-        client = await getClientByDataset(d);
+        client = await getClientByDataset(group[0]);
         const data = await client.query(query[i]);
         return data;
       } catch (err) {
@@ -335,19 +364,24 @@ class MVTRouter {
     if (ctx.params.type === 'heatmap') {
       logger.debug('Heatmap tile');
       buff = await TileService.generateHeatmapTile(
-        ctx.state.dataset,
+        ctx.state.datasetGroups,
         coords,
         data,
         ctx.state,
         ctx.query.format,
         ctx.state.interval,
       );
-      ctx.set('datasets', ctx.state.dataset.map((d) => d.name).join(','));
+      ctx.set(
+        'datasets',
+        ctx.state.datasetGroups
+          .map((g) => g.map((d) => d.name).join(','))
+          .join(';'),
+      );
     } else {
       logger.debug('Position tile');
       buff = await TileService.generatePositionTile(
         data[0].rows,
-        ctx.state.dataset[0],
+        ctx.state.datasetGroups[0][0],
         coords,
       );
     }
@@ -358,11 +392,8 @@ class MVTRouter {
       ctx.body = Buffer.from(new Uint8Array(buff));
     } else {
       ctx.compress = false;
-      if (ctx.state.mode) {
-        ctx.set('columns', `count,${ctx.state.mode}`);
-      } else {
-        ctx.set('columns', 'count');
-      }
+      ctx.set('columns', 'count');
+
       const compressed = await new Promise((resolve, reject) => {
         zlib.gzip(buff, (err, data) => {
           if (err) {
@@ -381,15 +412,7 @@ class MVTRouter {
 }
 
 router.get(
-  '/:dataset/tile/:type/:z/:x/:y',
-  existDataset,
-  existType,
-  cache,
-  addDateRange,
-  MVTRouter.getTile,
-);
-router.get(
-  '/datasets/:dataset/tile/:type/:z/:x/:y',
+  '/datasets/tile/:type/:z/:x/:y',
   existDatasetV1,
   existType,
   cacheV1,
@@ -398,39 +421,36 @@ router.get(
 );
 
 router.get(
-  '/datasets/:dataset/legend/:z',
+  '/datasets/legend/:z',
   existDatasetV1,
   addDateRange,
   MVTRouter.getStatistics,
 );
 router.get(
-  '/datasets/:dataset/legend',
+  '/datasets/legend',
   existDatasetV1,
   addDateRange,
   MVTRouter.getStatistics,
 );
 
 router.get(
-  '/datasets/:dataset/sampling/:z',
+  '/datasets/sampling/:z',
   existDatasetV1,
   addDateRange,
   MVTRouter.getSampling,
 );
 router.get(
-  '/datasets/:dataset/sampling',
+  '/datasets/sampling',
   existDatasetV1,
   addDateRange,
   MVTRouter.getSampling,
 );
 
 router.get(
-  '/datasets/:dataset/interaction/:z/:x/:y/:cellColumn/:cellRow',
+  '/datasets/interaction/:z/:x/:y/:cellColumn/:cellRow',
   existDatasetV1,
   addDateRange,
   MVTRouter.getInteraction,
 );
-
-router.get('/:dataset/statistics/:z', existDataset, MVTRouter.getStatistics);
-router.get('/:dataset/statistics', existDataset, MVTRouter.getStatistics);
 
 export default router;

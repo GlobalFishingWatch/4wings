@@ -2,9 +2,9 @@ export async function addDateRange(ctx, next) {
   if (ctx.state.dateRange && ctx.state.dateRange.length > 0) {
     ctx.state.filters = ctx.state.filters.map((filter, index) => {
       if (
-        ctx.state.dataset[index].name.indexOf('temperature') >= 0 ||
-        ctx.state.dataset[index].name.indexOf('chlorophyl') >= 0 ||
-        ctx.state.dataset[index].name.indexOf('salinity') >= 0
+        ctx.state.datasetGroups[index][0].name.indexOf('temperature') >= 0 ||
+        ctx.state.datasetGroups[index][0].name.indexOf('chlorophyl') >= 0 ||
+        ctx.state.datasetGroups[index][0].name.indexOf('salinity') >= 0
       ) {
         if (!filter) {
           filter = ` htime >= ${Math.floor(
