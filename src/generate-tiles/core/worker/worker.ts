@@ -114,6 +114,8 @@ async function uploadGCSBuffer(options, name, period, date, coords, buffer) {
     .bucket(options.cache.bucket)
     .file(filePath)
     .createWriteStream({
+      resumable: false,
+      validation: 'md5',
       metadata: {
         contentEncoding: 'gzip',
       },
