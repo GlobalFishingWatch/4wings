@@ -412,7 +412,7 @@ class MVTRouter {
 }
 
 router.get(
-  '/datasets/tile/:type/:z/:x/:y',
+  '/tile/:type/:z/:x/:y',
   existDatasetV1,
   existType,
   cacheV1,
@@ -420,34 +420,14 @@ router.get(
   MVTRouter.getTile,
 );
 
-router.get(
-  '/datasets/legend/:z',
-  existDatasetV1,
-  addDateRange,
-  MVTRouter.getStatistics,
-);
-router.get(
-  '/datasets/legend',
-  existDatasetV1,
-  addDateRange,
-  MVTRouter.getStatistics,
-);
+router.get('/legend/:z', existDatasetV1, addDateRange, MVTRouter.getStatistics);
+router.get('/legend', existDatasetV1, addDateRange, MVTRouter.getStatistics);
+
+router.get('/sampling/:z', existDatasetV1, addDateRange, MVTRouter.getSampling);
+router.get('/sampling', existDatasetV1, addDateRange, MVTRouter.getSampling);
 
 router.get(
-  '/datasets/sampling/:z',
-  existDatasetV1,
-  addDateRange,
-  MVTRouter.getSampling,
-);
-router.get(
-  '/datasets/sampling',
-  existDatasetV1,
-  addDateRange,
-  MVTRouter.getSampling,
-);
-
-router.get(
-  '/datasets/interaction/:z/:x/:y/:cellColumn/:cellRow',
+  '/interaction/:z/:x/:y/:cellColumn/:cellRow',
   existDatasetV1,
   addDateRange,
   MVTRouter.getInteraction,
