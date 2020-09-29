@@ -38,7 +38,7 @@ async function generateTileHeatmap(options, date, coords) {
     if (options.heatmap.temporalAggregation) {
       const query = await TileService.generateQuery(
         coords,
-        [options],
+        [[options]],
         'heatmap',
         [],
         options.heatmap.temporalAggregation,
@@ -50,7 +50,7 @@ async function generateTileHeatmap(options, date, coords) {
       }
       logger.debug('Generating heatmap (mvt) tile');
       let buff = await TileService.generateHeatmapTile(
-        [options],
+        [[options]],
         coords,
         [data],
         { temporalAggregation: options.heatmap.temporalAggregation },
@@ -60,7 +60,7 @@ async function generateTileHeatmap(options, date, coords) {
 
       logger.debug('Generating heatmap (intArray) tile');
       buff = await TileService.generateHeatmapTile(
-        [options],
+        [[options]],
         coords,
         [data],
         { temporalAggregation: options.heatmap.temporalAggregation },
@@ -88,7 +88,7 @@ async function generateTileHeatmap(options, date, coords) {
 
         const query = await TileService.generateQuery(
           coords,
-          [options],
+          [[options]],
           'heatmap',
           [filters],
           options.heatmap.temporalAggregation,
@@ -102,7 +102,7 @@ async function generateTileHeatmap(options, date, coords) {
         }
         logger.debug('Generating heatmap (mvt) tile');
         let buff = await TileService.generateHeatmapTile(
-          [options],
+          [[options]],
           coords,
           [data],
           { temporalAggregation: options.heatmap.temporalAggregation },
@@ -113,7 +113,7 @@ async function generateTileHeatmap(options, date, coords) {
 
         logger.debug('Generating heatmap (intArray) tile');
         buff = await TileService.generateHeatmapTile(
-          [options],
+          [[options]],
           coords,
           [data],
           { temporalAggregation: options.heatmap.temporalAggregation },
