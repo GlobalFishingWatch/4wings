@@ -13,9 +13,9 @@ CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%> (
 ) 
 <% if (locals.partitioned) { %>PARTITION BY RANGE (timestamp)<%}%>;
 
-
+<% if (locals.partitioned) { %>
 CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>  PARTITION of <%=name%>_z<%=i%> for values from ('<%=startDate%>') to ('<%=endDate%>');
-
+<%}%>
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
 CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>_index ON <%=name%>_z<%=i%>_<%=year%>(pos, cell, htime, <%= searchColumns.join(',') %>);
