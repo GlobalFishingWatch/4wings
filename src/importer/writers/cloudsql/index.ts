@@ -61,6 +61,7 @@ export default class CloudSQLWriter implements Writer {
       endDate: this.endDate,
       year: this.year,
       extraColumns: this.options.target.columnsDefinition,
+      partitioned: this.options.target.partitioned,
     };
     const tables = await ejs.renderFile(
       `${__dirname}/templates/tables.ejs`,
