@@ -35,32 +35,14 @@ function getPool(dataset) {
 
 async function generateTileHeatmap(options, date, coords) {
   try {
-    for (let i = 0; i < options.cache.periods.length; i++) {
-      const period = options.cache.periods[i];
-      logger.debug(`Generating cache for ${period}`);
-
-      let interval = null;
-      let filters = undefined;
-      if (period === 'yearly') {
-        interval = 86400;
-        const startDate = DateTime.utc(date.getFullYear()).startOf('year');
-
-        filters = `timestamp >= '${startDate.toISO()}' and timestamp <= '${startDate
-          .plus({ year: 1, days: 100 })
-          .toISO()}'`;
-      } else if (period === 'all') {
-        interval = 86400 * 10;
-      }
-
+    if (options.heatmap.temporalAggregation) {
       const query = await TileService.generateQuery(
         coords,
         [options],
         'heatmap',
-        [filters],
+        [],
         options.heatmap.temporalAggregation,
-        interval,
       );
-
       const data = await getPool(options).query(query[0]);
       if (!data || data.rows.length === 0) {
         console.log('no-tile');
@@ -73,9 +55,8 @@ async function generateTileHeatmap(options, date, coords) {
         [data],
         { temporalAggregation: options.heatmap.temporalAggregation },
         'heatmap',
-        interval,
       );
-      await uploadGCSBuffer(options, 'heatmap', period, date, coords, buff);
+      await uploadGCSBuffer(options, 'heatmap', null, date, coords, buff);
 
       logger.debug('Generating heatmap (intArray) tile');
       buff = await TileService.generateHeatmapTile(
@@ -84,10 +65,64 @@ async function generateTileHeatmap(options, date, coords) {
         [data],
         { temporalAggregation: options.heatmap.temporalAggregation },
         'intArray',
-        interval,
       );
 
-      await uploadGCSBuffer(options, 'intArray', period, date, coords, buff);
+      await uploadGCSBuffer(options, 'intArray', null, date, coords, buff);
+    } else {
+      for (let i = 0; i < options.cache.periods.length; i++) {
+        const period = options.cache.periods[i];
+        logger.debug(`Generating cache for ${period}`);
+
+        let interval = null;
+        let filters = undefined;
+        if (period === 'yearly') {
+          interval = 86400;
+          const startDate = DateTime.utc(date.getFullYear()).startOf('year');
+
+          filters = `timestamp >= '${startDate.toISO()}' and timestamp <= '${startDate
+            .plus({ year: 1, days: 100 })
+            .toISO()}'`;
+        } else if (period === 'all') {
+          interval = 86400 * 10;
+        }
+
+        const query = await TileService.generateQuery(
+          coords,
+          [options],
+          'heatmap',
+          [filters],
+          options.heatmap.temporalAggregation,
+          interval,
+        );
+
+        const data = await getPool(options).query(query[0]);
+        if (!data || data.rows.length === 0) {
+          console.log('no-tile');
+          return;
+        }
+        logger.debug('Generating heatmap (mvt) tile');
+        let buff = await TileService.generateHeatmapTile(
+          [options],
+          coords,
+          [data],
+          { temporalAggregation: options.heatmap.temporalAggregation },
+          'heatmap',
+          interval,
+        );
+        await uploadGCSBuffer(options, 'heatmap', period, date, coords, buff);
+
+        logger.debug('Generating heatmap (intArray) tile');
+        buff = await TileService.generateHeatmapTile(
+          [options],
+          coords,
+          [data],
+          { temporalAggregation: options.heatmap.temporalAggregation },
+          'intArray',
+          interval,
+        );
+
+        await uploadGCSBuffer(options, 'intArray', period, date, coords, buff);
+      }
     }
   } catch (err) {
     console.error(err);
@@ -104,7 +139,7 @@ async function uploadGCSBuffer(options, name, period, date, coords, buffer) {
   }
   const filePath = `${
     options.cache.dir
-      ? `${options.cache.dir}/${period}${
+      ? `${options.cache.dir}${period ? `/${period}` : ''}${
           period === 'yearly' ? `/${date.getFullYear()}` : ''
         }/`
       : ''
