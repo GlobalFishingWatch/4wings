@@ -68,6 +68,10 @@ export async function existDataset(ctx, next) {
   const filters = parseFilters(ctx);
   const parsedFilters = filters.map((f) => parser.parse(f));
   ctx.state.filters = filters;
+  if (filters.length === 0) {
+    ctx.state.filters = [''];
+  }
+
   if (ctx.query['date-range']) {
     ctx.state.dateRange = ctx.query['date-range'].split(',');
   } else {
@@ -79,6 +83,7 @@ export async function existDataset(ctx, next) {
     try {
       const datasetGroup = await Promise.all(
         group.map(async (d) => {
+          console.log('Obtaining ', d);
           const dataset = await PostgresService.getDatasetById(d);
           if (!dataset) {
             throw new Error('Dataset not found');
