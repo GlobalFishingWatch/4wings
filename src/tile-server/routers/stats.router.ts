@@ -24,7 +24,11 @@ async function getClientByDataset(dataset) {
     if (process.env.NODE_ENV === 'dev') {
       connection.host = 'localhost';
     } else if (dataset.target.type === 'cloudsql') {
-      connection.host = `/cloudsql/${dataset.target.database.projectId}:${dataset.target.database.region}:${dataset.target.database.instanceId}`;
+      connection.host = `/cloudsql/${dataset.target.database.projectId}:${
+        dataset.target.database.region
+          ? dataset.target.database.region
+          : 'us-central1'
+      }:${dataset.target.database.instanceId}`;
     } else {
       connection.host = dataset.target.database.host;
     }
@@ -39,7 +43,7 @@ async function getClientByDataset(dataset) {
 
 class StatsRouter {
   static async getStats(ctx: Koa.ParameterizedContext) {
-    const dataset = ctx.state.dataset[0];
+    const dataset = ctx.state.datasetGroups[0][0];
     if (dataset.name.toLowerCase().indexOf('fishing') >= 0) {
       let client;
       try {
@@ -101,11 +105,6 @@ class StatsRouter {
   }
 }
 
-router.get(
-  '/datasets/:dataset/stats/:aoiId',
-  existDataset,
-  addDateRange,
-  StatsRouter.getStats,
-);
+router.get('/stats/:aoiId', existDataset, addDateRange, StatsRouter.getStats);
 
 export default router;

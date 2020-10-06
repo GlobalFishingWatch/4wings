@@ -257,7 +257,7 @@ class MVTRouter {
     ctx.state.datasetGroups.forEach(async (group, i) => {
       const groupQueries = group.map(async (d) => {
         const query = `
-          select distinct vessel_id
+          select vessel_id, sum(hours) as sum
           from ${d.name}_z${ctx.params.z}
           where pos = ${pos} and (${cells
           .map((cell) => `cell = ${cell}`)
@@ -266,7 +266,9 @@ class MVTRouter {
             ctx.state.filters && ctx.state.filters[i]
               ? `AND ${ctx.state.filters[i]}`
               : ''
-          }      
+          } group by 1 order by sum desc ${
+          ctx.query.limit ? ` limit ${parseInt(ctx.query.limit)}` : ''
+        }     
         `;
         console.log(query);
         let client;
