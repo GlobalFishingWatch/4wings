@@ -257,7 +257,7 @@ class MVTRouter {
     ctx.state.datasetGroups.forEach(async (group, i) => {
       const groupQueries = group.map(async (d) => {
         const query = `
-          select vessel_id, sum(hours) as sum
+          select vessel_id as id, sum(hours) as hours
           from ${d.name}_z${ctx.params.z}
           where pos = ${pos} and (${cells
           .map((cell) => `cell = ${cell}`)
@@ -266,7 +266,7 @@ class MVTRouter {
             ctx.state.filters && ctx.state.filters[i]
               ? `AND ${ctx.state.filters[i]}`
               : ''
-          } group by 1 order by sum desc ${
+          } group by 1 order by hours desc ${
           ctx.query.limit ? ` limit ${parseInt(ctx.query.limit)}` : ''
         }     
         `;
@@ -280,7 +280,7 @@ class MVTRouter {
             return { name: d.name, data: null };
           }
 
-          return { data: data.rows.map((d) => d.vessel_id), name: d.name };
+          return { data: data.rows, name: d.name };
         } catch (err) {
           logger.error('Error in statistics query', err);
           throw err;
