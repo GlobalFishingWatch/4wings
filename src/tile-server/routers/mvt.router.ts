@@ -280,7 +280,7 @@ class MVTRouter {
             return { name: d.name, data: null };
           }
 
-          return { data: data.rows };
+          return data.rows;
         } catch (err) {
           logger.error('Error in statistics query', err);
           throw err;
