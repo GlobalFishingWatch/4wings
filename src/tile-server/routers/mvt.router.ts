@@ -280,7 +280,7 @@ class MVTRouter {
             return { name: d.name, data: null };
           }
 
-          return { data: data.rows, name: d.name };
+          return { data: data.rows };
         } catch (err) {
           logger.error('Error in statistics query', err);
           throw err;
@@ -294,9 +294,7 @@ class MVTRouter {
     });
     try {
       const data: any = await Promise.all(queries);
-      ctx.body = data.reduce((ac, c) => {
-        return { ...ac, [c.name]: c.data };
-      }, {});
+      ctx.body = data;
     } catch (err) {
       console.error(err);
       throw err;
