@@ -181,10 +181,11 @@
               window.location.protocol +
                 '//' +
                 window.location.host +
-                '/v1/datasets' +
+                '/v1' +
                 '/tile/' +
                 parts[1] +
-                `/{z}/{x}/{y}?datasets[0]=${parts[0]}`,
+                `/{z}/{x}/{y}?datasets[0]=${parts[0]}&proxy=true`,
+              // 'https://gateway.api.dev.globalfishingwatch.org/v1/4wings/tile/heatmap/{z}/{x}/{y}?proxy=true&format=intArray&temporal-aggregation=false&interval=10days&datasets[0]=fishing_v4',
               // 'https://storage.googleapis.com/raul-tiles-scratch-60ttl/dgg_salinity_caribe/heatmap-{z}-{x}-{y}.pbf',
             ],
           },
@@ -288,16 +289,19 @@
         minZoom: 0,
         maxZoom: 8,
         hash: true,
-        // transformRequest: (url, resourceType) => {
-        //   if (resourceType == 'Tile' && url.includes('datasets')) {
-        //     console.log('url', url);
-        //     return {
-        //       url: url,
-        //       origin: 'http://localhost:5000',
-        //       headers: { Authorization: 'Bearer adsfa' },
-        //     };
-        //   }
-        // },
+        transformRequest: (url, resourceType) => {
+          if (resourceType == 'Tile') {
+            console.log('url', url);
+            return {
+              url: url,
+              origin: 'http://localhost:5000',
+              headers: {
+                Authorization:
+                  'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZEtleSJ9.eyJkYXRhIjp7ImZpcnN0TmFtZSI6IlJhdWwiLCJsYXN0TmFtZSI6IlJlcXVlcm8iLCJlbWFpbCI6InJhdWxAZ2xvYmFsZmlzaGluZ3dhdGNoLm9yZyIsInBob3RvIjoiIiwiaWQiOjQ2LCJ0eXBlIjoidXNlciJ9LCJpYXQiOjE2MDEzODY1MjQsImV4cCI6MTYwMTM4ODMyNCwiYXVkIjoiZ2Z3IiwiaXNzIjoiZ2Z3In0.AV-Tw3sO75acxfrFE8nImIcCwAPSTMSBje1AaqJskO7ro5Eb8Nsqq4-8p4LQW5yHwBUQfgFStYtdAxXy00a-RZCqG-_Hkhsb3KCGaZOperJ_5mTNnoIlOoDMniAJhKZv0GzDqkhl_z0KkO4sFlS1Vd8KRMBjBYPVXKeed5bJ8E7HuPcUlsTrqFaiPuP7RxWroRuzUrDT4sID8AYtUZpzaVQbaDfK83s8RkNwhSopR6Qt2d3eLIAX781TS1cOHZNhT8tpzCu6t52b79RWHlxGdz7CI5WsDempQZtGbRRisI9YrGzt_TrrATm45bHjKX9lJlnVkFiN4izFM_-VUusHu-YvxSpO04OSLnWLqdjzo3asm17iDLSV4K3FgljJogn10P37AaJYHI_NCIjUkZWFRi4vDAuAmhBR7IoiPdTX4wFs2PJMU2Qqa8EvjgEsnll1nEnCTzuCCqhTOWR2_qm7aOjMHosSP2sOUe3wXAtGiq-Um-CL8kjE_mva74itnWvH',
+              },
+            };
+          }
+        },
       });
       map.showTileBoundaries = true;
       map.on('zoom', () => {
