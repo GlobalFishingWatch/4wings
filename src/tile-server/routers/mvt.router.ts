@@ -40,6 +40,7 @@ async function getClientByDataset(dataset) {
     if (dataset.target.database.port && process.env.NODE_ENV === 'dev') {
       connection.port = dataset.target.database.port;
     }
+
     pools[dataset.name] = new Pool(connection);
   }
 
@@ -225,7 +226,7 @@ class MVTRouter {
       );
     } else {
       const promises = [];
-      for (let i = 0; i <= ctx.state.dataset[0].maxZoom; i++) {
+      for (let i = 0; i <= ctx.state.datasetGroups[0][0].maxZoom; i++) {
         const zoom = i;
         promises.push(
           MVTRouter.getStatisticsByZoom(ctx, i).then((data) => {
