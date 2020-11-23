@@ -278,7 +278,7 @@ class MVTRouter {
           const data = await client.query(query);
           if (!data || !data.rows || data.rows.length === 0) {
             console.log('Error obtaining statistics');
-            return { name: d.name, data: null };
+            return [];
           }
 
           return data.rows;
