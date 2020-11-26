@@ -90,10 +90,11 @@ function yearCache(dataset, dateRange = [], interval) {
 
 export async function cache(ctx: Koa.ParameterizedContext, next) {
   if (
-    (ctx.state.dataset && ctx.state.dataset.length > 1) ||
+    (ctx.state.datasetGroups && ctx.state.datasetGroups.length > 1) ||
+    (ctx.state.datasetGroups[0] && ctx.state.datasetGroups[0].length > 1) ||
     (ctx.state.filters && ctx.state.filters[0]) ||
     ctx.state.temporalAggregation !==
-      ctx.state.dataset[0].heatmap.temporalAggregation
+      ctx.state.datasetGroups[0][0].heatmap.temporalAggregation
   ) {
     console.log('Not cache because several datasets');
     await next();
@@ -102,12 +103,12 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
   }
 
   const yearOfCache = yearCache(
-    ctx.state.dataset[0],
+    ctx.state.datasetGroups[0][0],
     ctx.state.dateRange,
     ctx.query.interval,
   );
   const allYears = allDataFilters(
-    ctx.state.dataset[0],
+    ctx.state.datasetGroups[0][0],
     ctx.state.dateRange,
     ctx.query.interval,
     ctx.state.temporalAggregation,
@@ -125,7 +126,7 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
     return;
   }
 
-  const dataset = ctx.state.dataset[0];
+  const dataset = ctx.state.datasetGroups[0][0];
   if (!dataset.cache) {
     console.log('Cache not configured');
     await next();
@@ -155,8 +156,8 @@ export async function cache(ctx: Koa.ParameterizedContext, next) {
       url = `${bucket.replace('gs://', '//storage.googleapis.com/')}${
         dataset.cache.dir ? `/${dataset.cache.dir}` : ''
       }${
-        ctx.state.dataset[0].name !== 'carriers_v8_hd' &&
-        !ctx.state.dataset[0].heatmap.temporalAggregation
+        ctx.state.datasetGroups[0][0].name !== 'carriers_v8_hd' &&
+        !ctx.state.datasetGroups[0][0].heatmap.temporalAggregation
           ? '/all'
           : ''
       }/${name}-${ctx.params.z}-${ctx.params.x}-${

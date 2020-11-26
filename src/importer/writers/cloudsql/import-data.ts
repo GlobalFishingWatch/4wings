@@ -89,7 +89,8 @@ export async function importData(options) {
     });
   }
   for (let i = 0; i <= options.maxZoom; i++) {
-    for (let j = 0; j < 3; j++) {
+    let j = 0;
+    while (true) {
       const file = `gs://${options.target.tmpStorage.bucket}${
         options.target.tmpStorage.dir ? `/${options.target.tmpStorage.dir}` : ''
       }/${i}.csv`;
@@ -113,6 +114,8 @@ export async function importData(options) {
           logger.error(err);
           throw err;
         }
+      } finally {
+        j++;
       }
     }
   }

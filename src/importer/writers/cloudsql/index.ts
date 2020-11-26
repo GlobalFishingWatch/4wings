@@ -61,6 +61,7 @@ export default class CloudSQLWriter implements Writer {
       endDate: this.endDate,
       year: this.year,
       extraColumns: this.options.target.columnsDefinition,
+      partitioned: this.options.target.partitioned,
     };
     const tables = await ejs.renderFile(
       `${__dirname}/templates/tables.ejs`,
@@ -79,6 +80,7 @@ export default class CloudSQLWriter implements Writer {
         startDate: this.startDate,
         endDate: this.endDate,
         year: this.year,
+        partitioned: this.options.target.partitioned,
       };
       for (let i = 0; i <= generationOptions.maxZoom; i++) {
         logger.debug(`Creating cluster for ${i} level`);
@@ -201,6 +203,7 @@ export default class CloudSQLWriter implements Writer {
       logger.debug('Deleting previous data');
       const generationOptions = {
         ...this.options,
+        partitioned: this.options.target.partitioned,
       };
       for (let i = 0; i <= generationOptions.maxZoom; i++) {
         logger.debug(`Deleting previous data for ${i} level`);

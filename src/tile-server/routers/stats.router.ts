@@ -43,7 +43,7 @@ async function getClientByDataset(dataset) {
 
 class StatsRouter {
   static async getStats(ctx: Koa.ParameterizedContext) {
-    const dataset = ctx.state.dataset[0];
+    const dataset = ctx.state.datasetGroups[0][0];
     if (dataset.name.toLowerCase().indexOf('fishing') >= 0) {
       let client;
       try {
@@ -105,11 +105,6 @@ class StatsRouter {
   }
 }
 
-router.get(
-  '/datasets/:dataset/stats/:aoiId',
-  existDataset,
-  addDateRange,
-  StatsRouter.getStats,
-);
+router.get('/stats/:aoiId', existDataset, addDateRange, StatsRouter.getStats);
 
 export default router;
