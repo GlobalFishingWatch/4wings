@@ -340,7 +340,7 @@ class MVTRouter {
       ctx.state.temporalAggregation,
       ctx.state.interval,
     );
-    console.log(query);
+
     const promises = ctx.state.datasetGroups.map(async (group, i) => {
       let client;
       try {
@@ -356,6 +356,7 @@ class MVTRouter {
         }
       }
     });
+
     const data: any = await Promise.all(promises);
     if (data.every((d: any) => !d.rows || d.rows.length === 0)) {
       ctx.throw(404, 'Tile empty');
@@ -364,6 +365,7 @@ class MVTRouter {
 
     if (ctx.params.type === 'heatmap') {
       logger.debug('Heatmap tile');
+      const start = Date.now();
       buff = await TileService.generateHeatmapTile(
         ctx.state.datasetGroups,
         coords,
@@ -372,6 +374,7 @@ class MVTRouter {
         ctx.query.format,
         ctx.state.interval,
       );
+      console.log('End', Date.now() - start);
       ctx.set(
         'datasets',
         ctx.state.datasetGroups
