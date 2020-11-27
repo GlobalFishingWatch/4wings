@@ -2,6 +2,17 @@ const zlib = require('zlib');
 const protobuf = require('protobufjs');
 const { byAlpha3 } = require('iso-country-codes');
 
+let proto;
+let protoTile;
+
+async function loadProto() {
+  if (proto) {
+    return;
+  }
+  proto = await protobuf.load(`${__dirname}/../proto/tile.proto`);
+  protoTile = proto.lookupType('tile.Tile');
+}
+
 export async function generateCustomPBF(
   datasets,
   ctxState,
@@ -89,9 +100,7 @@ export async function generateCustomPBF(
       }
     }
   }
-
-  const proto = await protobuf.load(`${__dirname}/../proto/tile.proto`);
-  const protoTile = proto.lookupType('tile.Tile');
+  await loadProto();
   const pbf = protoTile.encode(protoTile.create({ data })).finish();
 
   // const compressed = await new Promise((resolve, reject) => {
