@@ -356,11 +356,12 @@ class MVTRouter {
         }
       }
     });
-
+    let start = Date.now();
     const data: any = await Promise.all(promises);
     if (data.every((d: any) => !d.rows || d.rows.length === 0)) {
       ctx.throw(404, 'Tile empty');
     }
+    logger.debug('BBDD ' + (Date.now() - start));
     let buff = null;
 
     if (ctx.params.type === 'heatmap') {
@@ -374,7 +375,7 @@ class MVTRouter {
         ctx.query.format,
         ctx.state.interval,
       );
-      console.log('End', Date.now() - start);
+      logger.debug('Generate tile ' + (Date.now() - start));
       ctx.set(
         'datasets',
         ctx.state.datasetGroups
@@ -389,7 +390,7 @@ class MVTRouter {
         coords,
       );
     }
-    // console.log(buff);
+
     if (ctx.query.format !== 'intArray') {
       ctx.compress = true;
       ctx.set('content-type', 'application/vnd.mapbox-vector-tile');
