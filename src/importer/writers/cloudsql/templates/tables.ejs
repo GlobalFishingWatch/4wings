@@ -14,18 +14,18 @@ CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%> (
 <% if (locals.partitioned) { %>PARTITION BY RANGE (timestamp)<%}%>;
 
 <% if (locals.partitioned) { %>
-CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>  PARTITION of <%=name%>_z<%=i%> for values from ('<%=startDate%>') to ('<%=endDate%>');
+CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_<%=partitionName%>  PARTITION of <%=name%>_z<%=i%> for values from ('<%=startDate%>') to ('<%=endDate%>');
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>_index ON <%=name%>_z<%=i%>_<%=year%>(pos, cell, htime, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=partitionName%>_index ON <%=name%>_z<%=i%>_<%=partitionName%>(pos, cell, htime, <%= searchColumns.join(',') %>);
   <% } else {%>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>_index ON <%=name%>_z<%=i%>_<%=year%>(pos, cell, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=partitionName%>_index ON <%=name%>_z<%=i%>_<%=partitionName%>(pos, cell, <%= searchColumns.join(',') %>);
   <% } %>
 <% } else { %>
   <% if (locals.heatmap) { %>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>_index ON <%=name%>_z<%=i%>_<%=year%>(pos, cell, htime %>);
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=partitionName%>_index ON <%=name%>_z<%=i%>_<%=partitionName%>(pos, cell, htime %>);
   <% } else {%>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=year%>_index ON <%=name%>_z<%=i%>_<%=year%>(pos, cell %>);
+CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_<%=partitionName%>_index ON <%=name%>_z<%=i%>_<%=partitionName%>(pos, cell %>);
   <% } %>
 <% }%>
 <%} else {%>

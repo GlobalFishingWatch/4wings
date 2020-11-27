@@ -28,6 +28,7 @@ export default class CloudSQLWriter implements Writer {
   tmpDir: string;
   storage: any;
   year: number;
+  partitionName: number;
   startDate: string;
   endDate: string;
   constructor(
@@ -43,6 +44,9 @@ export default class CloudSQLWriter implements Writer {
       .toISO()
       .slice(0, 19)
       .replace('T', ' ');
+    if (options.target.partitioned) {
+      this.partitionName = this.year;
+    }
   }
 
   flushBuffer() {
@@ -61,7 +65,8 @@ export default class CloudSQLWriter implements Writer {
       endDate: this.endDate,
       year: this.year,
       extraColumns: this.options.target.columnsDefinition,
-      partitioned: this.options.target.partitioned,
+      partitioned: this.options.target.partitioned ? true : false,
+      partitionName: this.partitionName,
     };
     const tables = await ejs.renderFile(
       `${__dirname}/templates/tables.ejs`,
@@ -80,7 +85,8 @@ export default class CloudSQLWriter implements Writer {
         startDate: this.startDate,
         endDate: this.endDate,
         year: this.year,
-        partitioned: this.options.target.partitioned,
+        partitioned: this.options.target.partitioned ? true : false,
+        partitionName: this.partitionName,
       };
       for (let i = 0; i <= generationOptions.maxZoom; i++) {
         logger.debug(`Creating cluster for ${i} level`);
@@ -203,7 +209,8 @@ export default class CloudSQLWriter implements Writer {
       logger.debug('Deleting previous data');
       const generationOptions = {
         ...this.options,
-        partitioned: this.options.target.partitioned,
+        partitioned: this.options.target.partitioned ? true : false,
+        partitionName: this.partitionName,
       };
       for (let i = 0; i <= generationOptions.maxZoom; i++) {
         logger.debug(`Deleting previous data for ${i} level`);
