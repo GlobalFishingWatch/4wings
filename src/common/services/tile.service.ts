@@ -34,16 +34,20 @@ export class TileService {
   ) {
     // static async generateQuery(ctx: Koa.ParameterizedContext) {
     const pos = tile2Num(coords.z, coords.x, coords.y);
-
+    let intervalTable = '';
+    if (interval === 86400) {
+      intervalTable = 'day';
+    } else if (interval === 864000) {
+      intervalTable = '10days';
+    }
     return datasetGroups.map((group, index) => {
       const query = group
         .map((dataset) => {
-          console.log(filters[index]);
           let query = '';
           let htimeColumn = 'htime';
-          if (interval && dataset.heatmap.time !== interval) {
-            htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval}) as htime`;
-          }
+          // if (interval && dataset.heatmap.time !== interval) {
+          //   htimeColumn = `FLOOR(htime * ${dataset.heatmap.time} / ${interval}) as htime`;
+          // }
           const type = dataset[typeTile];
           if (typeTile === 'heatmap') {
             query = `
@@ -55,7 +59,9 @@ export class TileService {
                     .join(',')}`
                 : ''
             }
-            from ${dataset.name}_z${coords.z}
+            from ${dataset.name}_z${coords.z}${
+              intervalTable ? `_${intervalTable}` : ''
+            }
             where pos = ${parseInt(pos, 10)}
             ${filters && filters[index] ? `and ${filters[index]}` : ''}
             group by 1${!temporalAggregation ? ',2' : ''}`;

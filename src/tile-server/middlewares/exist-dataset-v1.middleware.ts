@@ -69,7 +69,7 @@ export async function existDataset(ctx, next) {
   const parsedFilters = filters.map((f) => parser.parse(f));
   ctx.state.filters = filters;
   if (filters.length === 0) {
-    ctx.state.filters = [''];
+    ctx.state.filters = new Array(datasetIdGroups.length).fill('');
   }
 
   if (ctx.query['date-range']) {
