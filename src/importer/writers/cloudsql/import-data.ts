@@ -107,7 +107,7 @@ export async function importData(options) {
         break;
       } catch (err) {
         logger.error(err);
-        if (err && err.response && err.response.status === 409 && j + 1 < 3) {
+        if (err && err.response && err.response.status === 409) {
           logger.debug(`Retrying file ${file} in 2 min`);
           await timeout(120);
         } else {
