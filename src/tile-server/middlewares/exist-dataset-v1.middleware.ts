@@ -52,7 +52,10 @@ function parseFilters(ctx) {
   const keys = Object.keys(ctx.query).filter((key) =>
     key.startsWith('filters'),
   );
-  const datasets = new Array(keys.length);
+  const datasetKeys = Object.keys(ctx.query).filter((key) =>
+    key.startsWith('datasets'),
+  );
+  const datasets = new Array(datasetKeys.length).fill('');
   keys.forEach((k) => {
     const indexRegex = /filters\[(?<index>[0-9]+)\]/gi;
     const resultRegex = indexRegex.exec(k);
