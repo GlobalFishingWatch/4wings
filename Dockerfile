@@ -8,6 +8,6 @@ COPY tsconfig.json tsconfig.json
 COPY tslint.json tslint.json
 COPY index.js index.js
 
-ENTRYPOINT ["node", "--max-http-header-size=80000", "index"]
+ENTRYPOINT ["node", "--max-http-header-size=80000", "--max-old-space-size=2048", "index"]
 
 
