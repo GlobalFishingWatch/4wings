@@ -16,7 +16,7 @@ function toString(options, data) {
   options.extraColumns.forEach((c) => {
     row += `,${
       data[c] !== undefined && data[c] !== null
-        ? data[c].indexOf(',') >= 0
+        ? typeof data[c] === 'string' && data[c].indexOf(',') >= 0
           ? `"${data[c]}"`
           : data[c]
         : ''
