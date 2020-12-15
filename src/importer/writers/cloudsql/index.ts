@@ -14,7 +14,13 @@ function toString(options, data) {
     data.timestamp
   },${data.htime !== undefined ? `${data.htime}` : ''}`;
   options.extraColumns.forEach((c) => {
-    row += `,${data[c] !== undefined && data[c] !== null ? data[c] : ''}`;
+    row += `,${
+      data[c] !== undefined && data[c] !== null
+        ? data[c].indexOf(',') >= 0
+          ? `"${data[c]}"`
+          : data[c]
+        : ''
+    }`;
   });
   return row;
 }
@@ -46,6 +52,7 @@ export default class CloudSQLWriter implements Writer {
       .replace('T', ' ');
     if (options.target.partitioned) {
       this.partitionName = this.year;
+      this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
     }
   }
 
