@@ -9,18 +9,18 @@ export async function addDateRange(ctx, next) {
         if (!filter) {
           filter = ` htime >= ${Math.floor(
             new Date(ctx.state.dateRange[0]).getTime() /
-              (ctx.state.dataset[index].heatmap.time * 1000),
+              (ctx.state.datasetGroups[index][0].heatmap.time * 1000),
           )} and htime <= ${Math.floor(
             new Date(ctx.state.dateRange[1]).getTime() /
-              (ctx.state.dataset[index].heatmap.time * 1000),
+              (ctx.state.datasetGroups[index][0].heatmap.time * 1000),
           )}`;
         } else {
           filter += ` and htime >= ${Math.floor(
             new Date(ctx.state.dateRange[0]).getTime() /
-              (ctx.state.dataset[index].heatmap.time * 1000),
+              (ctx.state.datasetGroups[index][0].heatmap.time * 1000),
           )} and htime <= ${Math.floor(
             new Date(ctx.state.dateRange[1]).getTime() /
-              (ctx.state.dataset[index].heatmap.time * 1000),
+              (ctx.state.datasetGroups[index][0].heatmap.time * 1000),
           )}`;
         }
       } else {

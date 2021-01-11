@@ -14,7 +14,13 @@ function toString(options, data) {
     data.timestamp
   },${data.htime !== undefined ? `${data.htime}` : ''}`;
   options.extraColumns.forEach((c) => {
-    row += `,${data[c] !== undefined && data[c] !== null ? data[c] : ''}`;
+    row += `,${
+      data[c] !== undefined && data[c] !== null
+        ? typeof data[c] === 'string' && data[c].indexOf(',') >= 0
+          ? `"${data[c]}"`
+          : data[c]
+        : ''
+    }`;
   });
   return row;
 }
@@ -46,6 +52,7 @@ export default class CloudSQLWriter implements Writer {
       .replace('T', ' ');
     if (options.target.partitioned) {
       this.partitionName = this.year;
+      this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
     }
   }
 
@@ -201,6 +208,41 @@ export default class CloudSQLWriter implements Writer {
     }
     await this.insertData();
     await this.clusterData();
+    await this.resamplingData();
+  }
+
+  async resamplingData() {
+    let client;
+    try {
+      logger.debug('Creating resampling sqls');
+      const generationOptions = {
+        ...this.options,
+        startDate: this.startDate,
+        endDate: this.endDate,
+        year: this.year,
+        extraColumns: this.options.target.columnsDefinition,
+        partitioned: this.options.target.partitioned ? true : false,
+        partitionName: this.partitionName,
+      };
+
+      logger.debug(`Creating resampling `);
+      const tables = await ejs.renderFile(
+        `${__dirname}/templates/resampling.ejs`,
+        generationOptions,
+      );
+      console.log(tables);
+      client = await this.pool.connect();
+      await client.query(tables);
+
+      logger.debug('Tables resampled successfully');
+    } catch (err) {
+      logger.error('Error resampling tables', err);
+      throw err;
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
   }
 
   async deleteData() {
