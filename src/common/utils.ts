@@ -4,6 +4,7 @@ export async function getOptions(url: string, token: string) {
     const options: any = {
       url,
       method: 'get',
+      json: true,
     };
     if (token) {
       options.headers = {

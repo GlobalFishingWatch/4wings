@@ -18,6 +18,7 @@
     "nodemon": "^2.0.3"
   },
   "dependencies": {
+    "auth-middleware": "git://github.com/GlobalFishingWatch/auth-middleware.git#develop",
     "@google-cloud/bigquery": "^4.7.0",
     "@google-cloud/storage": "^4.7.0",
     "@koa/cors": "^3.0.0",

@@ -9,10 +9,36 @@ import { promisify } from 'util';
 import { getOptions } from 'common/utils';
 const pipeline = promisify(stream.pipeline);
 
-export async function run(url, date, period, token, overrideConfig) {
+async function getConfig({
+  url,
+  configEncoded,
+  token,
+  overrideConfig,
+}): Promise<any> {
+  let config: any = {};
+  if (url) {
+    logger.debug('Obtaining config');
+    config = await getOptions(url, token);
+  }
+  if (configEncoded) {
+    logger.debug('Decoding config');
+    config = JSON.parse(Buffer.from(configEncoded, 'base64').toString());
+  }
+  return objectAssignDeep(config, overrideConfig);
+}
+
+export async function run(
+  { url, configEncoded, date, period, token },
+  overrideConfig,
+) {
   logger.debug('Obtaining options');
-  let config: any = await getOptions(url, token);
-  config = objectAssignDeep(config, overrideConfig);
+  let config: any = await getConfig({
+    url,
+    configEncoded,
+    token,
+    overrideConfig,
+  });
+
   let reader: Reader;
   let writer: Writer;
   try {

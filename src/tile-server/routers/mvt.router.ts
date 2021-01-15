@@ -10,6 +10,7 @@ import { cache as cacheV1 } from 'tile-server/middlewares/cache-v1.middleware';
 import * as zlib from 'zlib';
 import { TileService } from 'common/services/tile.service';
 import { addDateRange } from 'tile-server/middlewares/date-range.middleware';
+import { checkPermissions } from 'tile-server/middlewares/check-permissions.middleware';
 
 const router = new Router({
   prefix: '/v1',
@@ -418,6 +419,7 @@ class MVTRouter {
 
 router.get(
   '/tile/:type/:z/:x/:y',
+  checkPermissions,
   existDatasetV1,
   existType,
   cacheV1,
@@ -425,14 +427,39 @@ router.get(
   MVTRouter.getTile,
 );
 
-router.get('/legend/:z', existDatasetV1, addDateRange, MVTRouter.getStatistics);
-router.get('/legend', existDatasetV1, addDateRange, MVTRouter.getStatistics);
+router.get(
+  '/legend/:z',
+  checkPermissions,
+  existDatasetV1,
+  addDateRange,
+  MVTRouter.getStatistics,
+);
+router.get(
+  '/legend',
+  checkPermissions,
+  existDatasetV1,
+  addDateRange,
+  MVTRouter.getStatistics,
+);
 
-router.get('/sampling/:z', existDatasetV1, addDateRange, MVTRouter.getSampling);
-router.get('/sampling', existDatasetV1, addDateRange, MVTRouter.getSampling);
+router.get(
+  '/sampling/:z',
+  checkPermissions,
+  existDatasetV1,
+  addDateRange,
+  MVTRouter.getSampling,
+);
+router.get(
+  '/sampling',
+  checkPermissions,
+  existDatasetV1,
+  addDateRange,
+  MVTRouter.getSampling,
+);
 
 router.get(
   '/interaction/:z/:x/:y/:cellColumn/:cellRow',
+  checkPermissions,
   existDatasetV1,
   addDateRange,
   MVTRouter.getInteraction,
