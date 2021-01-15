@@ -20,11 +20,13 @@ function parseDatasets(ctx) {
 export async function checkPermissions(ctx, next) {
   const datasetIdGroups = parseDatasets(ctx);
   for (let i = 0; i < datasetIdGroups.length; i++) {
-    authMiddleware.utils.checkSomePermissionsInList(ctx.state.permissions, {
-      action: 'read',
-      type: 'dataset',
-      value: datasetIdGroups[i],
-    });
+    authMiddleware.utils.checkSomePermissionsInList(ctx.state.permissions, [
+      {
+        action: 'read',
+        type: 'dataset',
+        value: datasetIdGroups[i],
+      },
+    ]);
   }
 
   await next();
