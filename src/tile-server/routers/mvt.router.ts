@@ -11,6 +11,7 @@ import * as zlib from 'zlib';
 import { TileService } from 'common/services/tile.service';
 import { addDateRange } from 'tile-server/middlewares/date-range.middleware';
 import { checkPermissions } from 'tile-server/middlewares/check-permissions.middleware';
+import * as authMiddleware from 'auth-middleware';
 
 const router = new Router({
   prefix: '/v1',
@@ -419,6 +420,7 @@ class MVTRouter {
 
 router.get(
   '/tile/:type/:z/:x/:y',
+  authMiddleware.koa.obtainPermissions,
   checkPermissions,
   existDatasetV1,
   existType,
@@ -429,6 +431,7 @@ router.get(
 
 router.get(
   '/legend/:z',
+  authMiddleware.koa.obtainPermissions,
   checkPermissions,
   existDatasetV1,
   addDateRange,
@@ -436,6 +439,7 @@ router.get(
 );
 router.get(
   '/legend',
+  authMiddleware.koa.obtainPermissions,
   checkPermissions,
   existDatasetV1,
   addDateRange,
@@ -444,6 +448,7 @@ router.get(
 
 router.get(
   '/sampling/:z',
+  authMiddleware.koa.obtainPermissions,
   checkPermissions,
   existDatasetV1,
   addDateRange,
@@ -451,6 +456,7 @@ router.get(
 );
 router.get(
   '/sampling',
+  authMiddleware.koa.obtainPermissions,
   checkPermissions,
   existDatasetV1,
   addDateRange,
@@ -459,6 +465,7 @@ router.get(
 
 router.get(
   '/interaction/:z/:x/:y/:cellColumn/:cellRow',
+  authMiddleware.koa.obtainPermissions,
   checkPermissions,
   existDatasetV1,
   addDateRange,
