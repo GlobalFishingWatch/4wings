@@ -1,5 +1,5 @@
 FROM node:12.3-alpine
-RUN apk update && apk upgrade && mkdir /opt/project
+RUN apk update && apk upgrade && apk add git && mkdir /opt/project
 WORKDIR /opt/project
 COPY package.json package.json
 RUN npm install
