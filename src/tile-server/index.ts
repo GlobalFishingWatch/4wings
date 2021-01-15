@@ -10,6 +10,7 @@ import * as Static from 'koa-static';
 
 import mvtRouter from './routers/mvt.router';
 import statsRouter from './routers/stats.router';
+import * as authMiddleware from 'auth-middleware';
 
 export async function start(args, overrideConfig) {
   const app = new Koa();
@@ -38,6 +39,18 @@ export async function start(args, overrideConfig) {
       flush: require('zlib').Z_SYNC_FLUSH,
     }),
   );
+
+  app.use(async (ctx, next) => {
+    try {
+      await next();
+    } catch (err) {
+      if (err instanceof authMiddleware.errors.HttpException) {
+        ctx.throw(err.code, err.msg);
+        return;
+      }
+      ctx.throw(500, 'Internal server error');
+    }
+  });
 
   app.use(mvtRouter.routes()).use(mvtRouter.allowedMethods());
   app.use(statsRouter.routes()).use(statsRouter.allowedMethods());
