@@ -48,6 +48,10 @@ export async function start(args, overrideConfig) {
         ctx.throw(err.code, err.msg);
         return;
       }
+      if (ctx.status) {
+        throw err;
+      }
+
       ctx.throw(500, 'Internal server error');
     }
   });
