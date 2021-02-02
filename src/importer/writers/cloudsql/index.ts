@@ -223,6 +223,7 @@ export default class CloudSQLWriter implements Writer {
         extraColumns: this.options.target.columnsDefinition,
         partitioned: this.options.target.partitioned ? true : false,
         partitionName: this.partitionName,
+        groupColumn: this.options.heatmap.columns[0],
       };
 
       logger.debug(`Creating resampling `);
