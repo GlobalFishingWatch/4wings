@@ -100,7 +100,7 @@ export async function importData(options) {
           options.target.database.projectId,
           options.target.database.instanceId,
           options.target.database.database,
-          `${options.name}_z${i}`,
+          `"${options.name}_z${i}"`,
           columns,
         );
         logger.debug('Imported successfully');
