@@ -55,7 +55,7 @@ export class TileService {
             ${
               type.columns.length > 0
                 ? `,${type.columns
-                    .map((h) => `${h.func}(${h.column}) as ${h.alias}`)
+                    .map((h) => `${h.func}(*) as ${h.alias}`)
                     .join(',')}`
                 : ''
             }
