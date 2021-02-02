@@ -295,7 +295,7 @@ export default class CloudSQLWriter implements Writer {
         )
       `);
       const res = await client.query(`
-        select max(timestamp) as max, min(timestamp) as min from ${this.options.name}_z0
+        select max(timestamp) as max, min(timestamp) as min from "${this.options.name}_z0"
       `);
       await client.query(
         `
