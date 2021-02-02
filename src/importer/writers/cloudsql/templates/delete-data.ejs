@@ -1,5 +1,5 @@
 <% if (locals.partitioned) { %>
-DELETE FROM <%=name%>_z<%=level%>_<%=partitionName%>;
+DELETE FROM "<%=name%>_z<%=level%>_<%=partitionName%>";
 <% } else { %>
-DELETE FROM <%=name%>_z<%=level%>
+DELETE FROM "<%=name%>_z<%=level%>"
 <% } %>

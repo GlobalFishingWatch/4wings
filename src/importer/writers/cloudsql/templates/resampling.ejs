@@ -1,6 +1,6 @@
 <% for (let i = 0; i <= maxZoom; i++) { %>
 
-CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_10days (
+CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
  <% searchColumns.forEach(function(key){ %>
  <%= key %> <%= extraColumns[key]%>,<% }); %>
  timestamp timestamp NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_10days (
  cell integer NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_day (
+CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
  <% searchColumns.forEach(function(key){ %>
  <%= key %> <%= extraColumns[key]%>,<% }); %>
  timestamp timestamp NOT NULL,
@@ -26,60 +26,60 @@ CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_day (
 <% if (locals.partitioned) { %>PARTITION BY RANGE (timestamp)<%}%>;
 
 <% if (locals.partitioned) { %>
-CREATE TABLE IF NOT EXISTS <%=name%>_z<%=i%>_day_<%=partitionName%>  PARTITION of <%=name%>_z<%=i%>_day for values from ('<%=startDate%>') to ('<%=endDate%>');
+CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>"  PARTITION of "<%=name%>_z<%=i%>_day" for values from ('<%=startDate%>') to ('<%=endDate%>');
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell, htime, <%= searchColumns.join(',') %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_<%=partitionName%>_index ON <%=name%>_z<%=i%>_day_<%=partitionName%>(pos, cell, htime, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON <%=name%>_z<%=i%>_10days(pos, cell, htime, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>_index" ON "<%=name%>_z<%=i%>_day_<%=partitionName%>"(pos, cell, htime, <%= searchColumns.join(',') %>);
   <% } else {%>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell, <%= searchColumns.join(',') %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_<%=partitionName%>_index ON <%=name%>_z<%=i%>_day_<%=partitionName%>(pos, cell, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>_index" ON "<%=name%>_z<%=i%>_day_<%=partitionName%>"(pos, cell, <%= searchColumns.join(',') %>);
   <% } %>
 <% } else { %>
   <% if (locals.heatmap) { %>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell, htime %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_<%=partitionName%>_index ON <%=name%>_z<%=i%>_day_<%=partitionName%>(pos, cell, htime %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell, htime %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>_index" ON "<%=name%>_z<%=i%>_day_<%=partitionName%>"(pos, cell, htime %>);
   <% } else {%>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_<%=partitionName%>_index ON <%=name%>_z<%=i%>_day_<%=partitionName%>(pos, cell %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>_index" ON "<%=name%>_z<%=i%>_day_<%=partitionName%>"(pos, cell %>);
   <% } %>
 <% }%>
 <% } else { %>
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell, htime, <%= searchColumns.join(',') %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_index ON <%=name%>_z<%=i%>_day(pos, cell, htime, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell, htime, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_index" ON "<%=name%>_z<%=i%>_day"(pos, cell, htime, <%= searchColumns.join(',') %>);
   <% } else {%>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell, <%= searchColumns.join(',') %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_index ON <%=name%>_z<%=i%>_day(pos, cell, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell, <%= searchColumns.join(',') %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_index" ON "<%=name%>_z<%=i%>_day"(pos, cell, <%= searchColumns.join(',') %>);
   <% } %>
 <% } else { %>
   <% if (locals.heatmap) { %>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell, htime %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_index ON <%=name%>_z<%=i%>_day(pos, cell, htime %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell, htime %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_index" ON "<%=name%>_z<%=i%>_day"(pos, cell, htime %>);
   <% } else {%>
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_10days_index ON <%=name%>_z<%=i%>_10days(pos, cell %>);
-CREATE INDEX IF NOT EXISTS <%=name%>_z<%=i%>_day_index ON <%=name%>_z<%=i%>_day(pos, cell %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell %>);
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_index" ON "<%=name%>_z<%=i%>_day"(pos, cell %>);
   <% } %>
 <% }%>
 <% }%>
 <% }%>
 <% for (let i = 0; i <= maxZoom; i++) { %>
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
-insert into <%=name%>_z<%=i%>_10days(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
-insert into <%=name%>_z<%=i%>_day(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+insert into "<%=name%>_z<%=i%>_10days"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+insert into "<%=name%>_z<%=i%>_day"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
 <% } else {%>
-insert into <%=name%>_z<%=i%>_10days(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2,3) q;
-insert into <%=name%>_z<%=i%>_day(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2, 3) q;
+insert into "<%=name%>_z<%=i%>_10days"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2,3) q;
+insert into "<%=name%>_z<%=i%>_day"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,sum(hours) as hours from <%=name%>_z<%=i%> group by 1, 2, 3) q;
 <% } %>
 <% } %>
 <% for (let i = 0; i <= maxZoom; i++) { %>
 <% if (locals.partitioned) { %>
-CLUSTER <%=name%>_z<%=i%>_10days USING <%=name%>_z<%=i%>_10days_index;
-CLUSTER <%=name%>_z<%=i%>_day_<%=partitionName%> USING <%=name%>_z<%=i%>_day_<%=partitionName%>_index;
+CLUSTER "<%=name%>_z<%=i%>_10days" USING "<%=name%>_z<%=i%>_10days_index";
+CLUSTER "<%=name%>_z<%=i%>_day_<%=partitionName%>" USING "<%=name%>_z<%=i%>_day_<%=partitionName%>_index";
 <% } else { %>
-CLUSTER <%=name%>_z<%=i%>_10days USING <%=name%>_z<%=i%>_10days_index;
-CLUSTER <%=name%>_z<%=i%>_day USING <%=name%>_z<%=i%>_day_index;
+CLUSTER "<%=name%>_z<%=i%>_10days" USING "<%=name%>_z<%=i%>_10days_index";
+CLUSTER "<%=name%>_z<%=i%>_day" USING "<%=name%>_z<%=i%>_day_index";
 <% } %>
 <% } %>
 

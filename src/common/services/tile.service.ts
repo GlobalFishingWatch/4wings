@@ -59,9 +59,9 @@ export class TileService {
                     .join(',')}`
                 : ''
             }
-            from ${dataset.name}_z${coords.z}${
+            from "${dataset.name}_z${coords.z}${
               intervalTable ? `_${intervalTable}` : ''
-            }
+            }"
             where pos = ${parseInt(pos, 10)}
             ${filters && filters[index] ? `and ${filters[index]}` : ''}
             group by 1${!temporalAggregation ? ',2' : ''}`;
@@ -70,7 +70,7 @@ export class TileService {
             select htime, lat, lon ${
               type.columns ? `, ${type.columns.join(',')}` : ''
             }
-            from ${dataset.name}_z${coords.z}
+            from "${dataset.name}_z${coords.z}"
             where pos = ${parseInt(pos, 10)}
             ${filters && filters[index] ? `and ${filters[index]}` : ''}`;
           }
