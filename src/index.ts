@@ -1,4 +1,4 @@
-import * as argsParser from 'args-parser';
+const yargs = require('yargs/yargs');
 function showHelp() {
   console.log(`
 4Wings usage:
@@ -31,17 +31,17 @@ function parseConfigArgs(args) {
 }
 
 async function init() {
-  const configArgs = argsParser(process.argv);
+  const configArgs = yargs(process.argv.slice(2)).argv;
   const overrideConfig = parseConfigArgs(configArgs);
   let module: any;
-  if (configArgs.import) {
+  if (configArgs._[0] === 'import') {
     module = await import('./importer/index');
     await module.start(configArgs, overrideConfig);
     process.exit(0);
-  } else if (configArgs['tile-server']) {
+  } else if (configArgs._[0] === 'tile-server') {
     module = await import('./tile-server/index');
     await module.start(configArgs, overrideConfig);
-  } else if (configArgs['generate-tiles']) {
+  } else if (configArgs._[0] === 'generate-tiles') {
     module = await import('./generate-tiles/index');
     await module.start(configArgs, overrideConfig);
     process.exit(0);

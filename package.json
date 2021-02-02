@@ -18,13 +18,13 @@
     "nodemon": "^2.0.3"
   },
   "dependencies": {
-    "auth-middleware": "git://github.com/GlobalFishingWatch/auth-middleware.git#develop",
     "@google-cloud/bigquery": "^4.7.0",
     "@google-cloud/storage": "^4.7.0",
     "@koa/cors": "^3.0.0",
     "@koa/router": "^8.0.8",
     "@mapbox/tilebelt": "^1.0.1",
     "args-parser": "^1.1.0",
+    "auth-middleware": "git://github.com/GlobalFishingWatch/auth-middleware.git#develop",
     "axios": "^0.19.2",
     "csv-parser": "^2.3.2",
     "csv-write-stream": "^2.0.0",
@@ -58,7 +58,8 @@
     "typescript": "^3.8.3",
     "vt-pbf": "^3.1.1",
     "winston": "^3.2.1",
-    "workerpool": "^5.0.4"
+    "workerpool": "^5.0.4",
+    "yargs": "^16.2.0"
   },
   "prettier": {
     "trailingComma": "all",
