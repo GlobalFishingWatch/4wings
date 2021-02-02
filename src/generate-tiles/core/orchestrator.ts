@@ -2,6 +2,7 @@ import { logger } from 'logger';
 import { getOptions } from 'common/utils';
 import * as workerpool from 'workerpool';
 import { Storage } from '@google-cloud/storage';
+import * as objectAssignDeep from 'object-assign-deep';
 
 function generateTilesOfLevel(from: number, to: number) {
   const total = [];
@@ -54,11 +55,26 @@ async function removeGCSDir(options, date) {
 
   logger.debug('Removed successfully');
 }
+async function getConfig({
+  url,
+  configEncoded,
+  token,
+  overrideConfig,
+}): Promise<any> {
+  let config: any = {};
+  if (url) {
+    logger.debug('Obtaining config');
+    config = await getOptions(url, token);
+  }
+  if (configEncoded) {
+    logger.debug('Decoding config');
+    config = JSON.parse(Buffer.from(configEncoded, 'base64').toString());
+  }
+  return objectAssignDeep(config, overrideConfig);
+}
 
 export async function run(
-  url: string,
-  date: Date,
-  token: string,
+  { url, configEncoded, date, period, token },
   overrideConfig,
 ) {
   const pool = workerpool.pool(`${__dirname}/worker/worker.js`, {
@@ -66,7 +82,12 @@ export async function run(
   });
 
   logger.debug('Obtaining options');
-  const options: any = await getOptions(url, token);
+  let options: any = await getConfig({
+    url,
+    configEncoded,
+    token,
+    overrideConfig,
+  });
 
   // await removeGCSDir(options, date);
 

@@ -5,16 +5,24 @@ function printUsage() {
 Import command:
   Required arguments:
   --url=<Url of the config file>
+  --config-encoded=<base64 with config content>
   --date=<Date to execute>
+  --period=<Period to import the data (daily, monthly, yearly)>
   Optional arguments:
   --token=<Auth token to obtain the config file> (optional)
   `);
 }
 
 export async function start(args, overrideConfig) {
-  if (!args.url || !args.date) {
+  if (
+    (args.url && args['config-encoded']) ||
+    (!args.url && !args['config-encoded']) ||
+    !args.date
+  ) {
     printUsage();
     process.exit(1);
   }
-  await run(args.url, new Date(args.date), args.token, overrideConfig);
+  args.configEncoded = args['config-encoded'];
+  delete args['config-encoded'];
+  await run(args, overrideConfig);
 }
