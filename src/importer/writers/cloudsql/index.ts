@@ -46,7 +46,7 @@ export default class CloudSQLWriter implements Writer {
       this.year = new Date(this.date).getFullYear();
       const month = new Date(this.date).getMonth();
       if (options.target.partitionTime === 'monthly') {
-        const luxonDate = DateTime.utc(this.year, month).startOf('year');
+        const luxonDate = DateTime.utc(this.year, month + 1).startOf('month');
         this.startDate = luxonDate.toISO().slice(0, 19).replace('T', ' ');
         this.endDate = luxonDate
           .plus({ month: 1 })
