@@ -34,7 +34,7 @@ export default class CloudSQLWriter implements Writer {
   tmpDir: string;
   storage: any;
   year: number;
-  partitionName: number;
+  partitionName: string;
   startDate: string;
   endDate: string;
   constructor(
@@ -42,17 +42,30 @@ export default class CloudSQLWriter implements Writer {
     private date: string,
     private period: string,
   ) {
-    this.year = new Date(this.date).getFullYear();
-    const luxonDate = DateTime.utc(this.year).startOf('year');
-    this.startDate = luxonDate.toISO().slice(0, 19).replace('T', ' ');
-    this.endDate = luxonDate
-      .plus({ year: 1 })
-      .toISO()
-      .slice(0, 19)
-      .replace('T', ' ');
     if (options.target.partitioned) {
-      this.partitionName = this.year;
-      this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
+      this.year = new Date(this.date).getFullYear();
+      const month = new Date(this.date).getMonth();
+      if (options.target.partitionTime === 'month') {
+        const luxonDate = DateTime.utc(this.year, month).startOf('year');
+        this.startDate = luxonDate.toISO().slice(0, 19).replace('T', ' ');
+        this.endDate = luxonDate
+          .plus({ month: 1 })
+          .toISO()
+          .slice(0, 19)
+          .replace('T', ' ');
+        this.partitionName = `${this.year}_${month}`;
+        this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
+      } else {
+        const luxonDate = DateTime.utc(this.year).startOf('year');
+        this.startDate = luxonDate.toISO().slice(0, 19).replace('T', ' ');
+        this.endDate = luxonDate
+          .plus({ year: 1 })
+          .toISO()
+          .slice(0, 19)
+          .replace('T', ' ');
+        this.partitionName = `${this.year}`;
+        this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
+      }
     }
   }
 
@@ -70,7 +83,6 @@ export default class CloudSQLWriter implements Writer {
       ...this.options,
       startDate: this.startDate,
       endDate: this.endDate,
-      year: this.year,
       extraColumns: this.options.target.columnsDefinition,
       partitioned: this.options.target.partitioned ? true : false,
       partitionName: this.partitionName,
@@ -219,7 +231,6 @@ export default class CloudSQLWriter implements Writer {
         ...this.options,
         startDate: this.startDate,
         endDate: this.endDate,
-        year: this.year,
         extraColumns: this.options.target.columnsDefinition,
         partitioned: this.options.target.partitioned ? true : false,
         partitionName: this.partitionName,
