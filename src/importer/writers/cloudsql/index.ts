@@ -53,7 +53,8 @@ export default class CloudSQLWriter implements Writer {
           .toISO()
           .slice(0, 19)
           .replace('T', ' ');
-        this.partitionName = `${this.year}_${month}`;
+        this.partitionName = `${this.year}_${month + 1}`;
+        console.log(this.partitionName);
         this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
       } else {
         const luxonDate = DateTime.utc(this.year).startOf('year');
