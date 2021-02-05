@@ -1,5 +1,5 @@
 <% for (let i = 0; i <= maxZoom; i++) { %>
-
+DROP TABLE IF EXISTS "<%=name%>_z<%=i%>_10days" ;
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
  <% searchColumns.forEach(function(key){ %>
  <%= key %> <%= extraColumns[key]%>,<% }); %>
@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
  cell integer NOT NULL
 );
 
+DROP TABLE IF EXISTS "<%=name%>_z<%=i%>_day";
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
  <% searchColumns.forEach(function(key){ %>
  <%= key %> <%= extraColumns[key]%>,<% }); %>
@@ -65,12 +66,22 @@ CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_day_index" ON "<%=name%>_z<%=i%>_d
 <% }%>
 <% }%>
 <% for (let i = 0; i <= maxZoom; i++) { %>
-<% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
-insert into "<%=name%>_z<%=i%>_10days"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
-insert into "<%=name%>_z<%=i%>_day"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+<% if (locals.partitioned) { %>
+  <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
+  insert into "<%=name%>_z<%=i%>_10days"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>_<%=partitionName%>" group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+  insert into "<%=name%>_z<%=i%>_day"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>_<%=partitionName%>" group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+  <% } else {%>
+  insert into "<%=name%>_z<%=i%>_10days"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>_<%=partitionName%>" group by 1, 2,3) q;
+  insert into "<%=name%>_z<%=i%>_day"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>_<%=partitionName%>" group by 1, 2, 3) q;
+  <% } %>
 <% } else {%>
-insert into "<%=name%>_z<%=i%>_10days"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2,3) q;
-insert into "<%=name%>_z<%=i%>_day"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2, 3) q;
+  <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
+  insert into "<%=name%>_z<%=i%>_10days"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+  insert into "<%=name%>_z<%=i%>_day"(pos, cell, <%= searchColumns.join(',') %>,timestamp, htime, hours) select pos, cell, <%= searchColumns.join(',') %>, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2, <%for(let j = 3; j < searchColumns.length+4; j++) {%><%=j%><%=j+1<searchColumns.length+4 ? ',': ''%><%}%>) q;
+  <% } else {%>
+  insert into "<%=name%>_z<%=i%>_10days"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*864000) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 864000) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2,3) q;
+  insert into "<%=name%>_z<%=i%>_day"(pos, cell, timestamp, htime, hours) select pos, cell, to_timestamp(htime*86400) as timestamp, htime, hours from (select pos, cell, <%= searchColumns.join(',') %> ,FLOOR(htime * 3600 / 86400) as htime ,<%=groupColumn.func%>(<%=groupColumn.column%>) as hours from "<%=name%>_z<%=i%>" group by 1, 2, 3) q;
+  <% } %>
 <% } %>
 <% } %>
 <% for (let i = 0; i <= maxZoom; i++) { %>
