@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
 <% if (locals.partitioned) { %>PARTITION BY RANGE (timestamp)<%}%>;
 
 <% if (locals.partitioned) { %>
-DROP TABLE IF EXIST "<%=name%>_z<%=i%>_day_<%=partitionName%>";
+DROP TABLE IF EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>";
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>"  PARTITION of "<%=name%>_z<%=i%>_day" for values from ('<%=startDate%>') to ('<%=endDate%>');
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
