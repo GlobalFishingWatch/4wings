@@ -1,5 +1,9 @@
 <% for (let i = 0; i <= maxZoom; i++) { %>
-DROP TABLE IF EXISTS "<%=name%>_z<%=i%>_10days" ;
+
+<% if (!locals.partitioned) { %>
+DROP TABLE IF EXISTS "<%=name%>_z<%=i%>_10days";
+<% } %>
+
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
  <% searchColumns.forEach(function(key){ %>
  <%= key %> <%= extraColumns[key]%>,<% }); %>
@@ -11,8 +15,10 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
  <% } %>
  cell integer NOT NULL
 );
+<% if (locals.partitioned) { %>
+DELETE FROM "<%=name%>_z<%=i%>_10days" where timestamp between '<%=startDate%>' and '<%=endDate%>';
+<% } %>
 
-DROP TABLE IF EXISTS "<%=name%>_z<%=i%>_day";
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
  <% searchColumns.forEach(function(key){ %>
  <%= key %> <%= extraColumns[key]%>,<% }); %>
@@ -27,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
 <% if (locals.partitioned) { %>PARTITION BY RANGE (timestamp)<%}%>;
 
 <% if (locals.partitioned) { %>
+DROP TABLE IF EXIST "<%=name%>_z<%=i%>_day_<%=partitionName%>";
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>"  PARTITION of "<%=name%>_z<%=i%>_day" for values from ('<%=startDate%>') to ('<%=endDate%>');
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
