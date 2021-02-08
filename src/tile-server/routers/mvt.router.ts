@@ -40,7 +40,6 @@ async function getClientByDataset(dataset) {
     if (dataset.target.database.port && process.env.NODE_ENV === 'dev') {
       connection.port = dataset.target.database.port;
     }
-
     pools[dataset.name] = new Pool(connection);
   }
 
@@ -65,7 +64,7 @@ class MVTRouter {
             .filter((h) => h.alias === 'count')
             .map((h) => `${h.func}(${h.column}) as count`)
             .join(',')}
-          from ${d.name}_z${zoom}
+          from "${d.name}_z${zoom}"
           ${
             ctx.state.filters && ctx.state.filters[i]
               ? `WHERE ${ctx.state.filters[i]}`
@@ -151,7 +150,7 @@ class MVTRouter {
             .filter((h) => h.alias === 'count')
             .map((h) => `${h.func}(${h.column}) as count`)
             .join(',')}
-          from ${d.name}_z${zoom}
+          from "${d.name}_z${zoom}"
           ${
             ctx.state.filters && ctx.state.filters[i]
               ? `WHERE ${ctx.state.filters[i]}`
@@ -257,9 +256,12 @@ class MVTRouter {
     let queries = [];
     ctx.state.datasetGroups.forEach(async (group, i) => {
       const groupQueries = group.map(async (d) => {
+        console.log(d);
         const query = `
-          select vessel_id as id, sum(hours) as hours
-          from ${d.name}_z${ctx.params.z}
+          select vessel_id as id, 
+          ${d.heatmap.columns[0].func}(${d.heatmap.columns[0].column}) as hours
+          
+          from "${d.name}_z${ctx.params.z}"
           where pos = ${pos} and (${cells
           .map((cell) => `cell = ${cell}`)
           .join(' or ')})
@@ -324,6 +326,7 @@ class MVTRouter {
   }
 
   static async getTile(ctx: Koa.ParameterizedContext) {
+    console.log('Getting tile');
     const coords = {
       z: parseInt(ctx.params.z, 10),
       x: parseInt(ctx.params.x, 10),
@@ -340,6 +343,7 @@ class MVTRouter {
       ctx.state.temporalAggregation,
       ctx.state.interval,
     );
+    console.log(query);
 
     const promises = ctx.state.datasetGroups.map(async (group, i) => {
       let client;
