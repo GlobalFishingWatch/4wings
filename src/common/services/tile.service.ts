@@ -61,7 +61,9 @@ export class TileService {
                           !intervalTable
                             ? `${h.func}(${h.column}) as ${h.alias}`
                             : `sum(${
-                                h.func.toLowerCase() === 'sum' ? h.column : '*'
+                                h.func.toLowerCase() === 'sum'
+                                  ? h.column
+                                  : 'hours'
                               }) as ${h.alias}`
                         }`,
                     )
