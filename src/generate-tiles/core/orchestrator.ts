@@ -74,11 +74,11 @@ async function getConfig({
 }
 
 export async function run(
-  { url, configEncoded, date, period, token },
+  { url, configEncoded, date, period, token, threads },
   overrideConfig,
 ) {
   const pool = workerpool.pool(`${__dirname}/worker/worker.js`, {
-    maxWorkers: 8,
+    maxWorkers: threads || 8,
   });
 
   logger.debug('Obtaining options');

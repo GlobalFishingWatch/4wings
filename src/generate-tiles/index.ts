@@ -10,6 +10,7 @@ Import command:
   --period=<Period to import the data (daily, monthly, yearly)>
   Optional arguments:
   --token=<Auth token to obtain the config file> (optional)
+  --threads=<numThreads>
   `);
 }
 
