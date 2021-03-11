@@ -270,7 +270,7 @@ class MVTRouter {
               ? `AND ${ctx.state.filters[i]}`
               : ''
           } group by 1 order by hours desc ${
-          ctx.query.limit ? ` limit ${parseInt(ctx.query.limit)}` : ''
+          ctx.query.limit ? ` limit ${parseInt(ctx.query.limit as string)}` : ''
         }     
         `;
         console.log(query);
