@@ -26,7 +26,7 @@
     "args-parser": "^1.1.0",
     "auth-middleware": "git://github.com/GlobalFishingWatch/auth-middleware.git#develop",
     "avsc": "^5.5.3",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "csv-parser": "^2.3.2",
     "csv-write-stream": "^2.0.0",
     "dateformat": "^3.0.3",
