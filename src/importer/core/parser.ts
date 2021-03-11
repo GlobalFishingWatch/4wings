@@ -90,10 +90,10 @@ export function parseElement(options: any, origData: any): any[] {
 
   if (options.heatmap) {
     const time = options.heatmap.time ? options.heatmap.time * 1000 : dayInMS;
-    let dateTrunc = new Date(data.timestamp);
+    let dateTrunc = new Date(data.timestamp / 1000);
     dateTrunc = new Date(dateTrunc.getTime() - (dateTrunc.getTime() % time));
     data.htime = Math.floor(dateTrunc.getTime() / time);
-    data.timestamp = new Date(data.timestamp).toISOString();
+    data.timestamp = new Date(data.timestamp / 1000).toISOString();
   }
 
   const nums = getTileNums(data.lon, data.lat, options.maxZoom);

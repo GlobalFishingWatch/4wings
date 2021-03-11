@@ -171,6 +171,9 @@ export default class CloudSQLWriter implements Writer {
       ...this.options.target.database,
       host: `${this.options.target.database.projectId}-${this.options.target.database.region}-${this.options.target.database.instanceId}`,
     };
+    if (process.env.NODE_ENV == 'dev') {
+      options.host = 'localhost';
+    }
 
     this.pool = new Pool(options);
   }

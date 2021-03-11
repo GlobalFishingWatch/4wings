@@ -67,6 +67,15 @@ async function checkStatus(file, url) {
       await timeout(5);
       continue;
     } else if (res.data.status === 'DONE') {
+      if (
+        res.data.error &&
+        res.data.error.errors &&
+        res.data.error.errors.length > 0
+      ) {
+        throw new Error(
+          `Error importing (${JSON.stringify(res.data.error.errors)})`,
+        );
+      }
       logger.debug('Done');
       break;
     } else {
