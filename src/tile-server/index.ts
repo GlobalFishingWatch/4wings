@@ -59,8 +59,8 @@ export async function start(args, overrideConfig) {
   app.use(mvtRouter.routes()).use(mvtRouter.allowedMethods());
   app.use(statsRouter.routes()).use(statsRouter.allowedMethods());
 
-  const server = app.listen(process.env.PORT || 5000, () => {
-    console.log(`Running mvt tile server in port ${process.env.PORT || 5000}`);
+  const server = app.listen(process.env.PORT || 7080, () => {
+    console.log(`Running mvt tile server in port ${process.env.PORT || 7080}`);
   });
   server.setTimeout(900000);
 }
