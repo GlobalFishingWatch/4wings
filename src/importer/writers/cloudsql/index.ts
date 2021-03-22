@@ -67,6 +67,9 @@ export default class CloudSQLWriter implements Writer {
         this.partitionName = `${this.year}`;
         this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
       }
+      if (period === 'daily') {
+        this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${date.replace(/-/, '_')}`;
+      }
     }
   }
 
