@@ -74,7 +74,7 @@ export default class CloudSQLWriter implements Writer {
         this.importStartDate = this.date;
         this.importEndDate = DateTime.utc(
           importDate.getFullYear(),
-          importDate.getMonth(),
+          importDate.getMonth() + 1,
           importDate.getDate(),
         )
           .plus({ day: 1 })
@@ -86,7 +86,7 @@ export default class CloudSQLWriter implements Writer {
       } else if (period === 'monthly') {
         const luxonDate = DateTime.utc(
           importDate.getFullYear(),
-          importDate.getMonth(),
+          importDate.getMonth() + 1,
         );
         this.importStartDate = luxonDate.startOf('month').toISO().slice(0, 10);
         this.importEndDate = luxonDate
