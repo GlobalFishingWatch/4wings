@@ -9,10 +9,12 @@ const normalizeData = new Transform({
   readableObjectMode: true,
   writableObjectMode: true,
   transform(data, enc, cb) {
+    console.log('before', data.timestamp);
     data.lon = parseFloat(data.lon);
     data.lat = parseFloat(data.lat);
     data.timestamp = data.timestamp;
     this.push(data);
+    console.log('after', data.timestamp);
     cb();
   },
 });
