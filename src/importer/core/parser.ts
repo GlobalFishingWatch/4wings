@@ -89,7 +89,6 @@ export function parseElement(options: any, origData: any): any[] {
   const data = checkMaxMin(origData);
 
   if (options.heatmap) {
-    console.log('parser', data.timestamp);
     const time = options.heatmap.time ? options.heatmap.time * 1000 : dayInMS;
     let dateTrunc = new Date(data.timestamp);
     dateTrunc = new Date(dateTrunc.getTime() - (dateTrunc.getTime() % time));
