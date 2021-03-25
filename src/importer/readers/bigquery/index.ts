@@ -11,7 +11,7 @@ const normalizeData = new Transform({
   transform(data, enc, cb) {
     data.lon = parseFloat(data.lon);
     data.lat = parseFloat(data.lat);
-    data.timestamp = data.timestamp.value;
+    data.timestamp = data.timestamp;
     this.push(data);
     cb();
   },
