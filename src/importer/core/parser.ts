@@ -90,18 +90,28 @@ export function parseElement(options: any, origData: any): any[] {
 
   if (options.heatmap) {
     const time = options.heatmap.time ? options.heatmap.time * 1000 : dayInMS;
-    let dateTrunc = new Date(data.timestamp / 1000);
+    let dateTrunc = new Date(data.timestamp);
     dateTrunc = new Date(dateTrunc.getTime() - (dateTrunc.getTime() % time));
     data.htime = Math.floor(dateTrunc.getTime() / time);
-    data.timestamp = new Date(data.timestamp / 1000).toISOString();
+    data.timestamp = new Date(data.timestamp).toISOString();
   }
+
+  const nums = getTileNums(data.lon, data.lat, options.maxZoom);
+
+  const cells = getCells(
+    options.maxZoom,
+    options.cellsByZoom,
+    data.lon,
+    data.lat,
+  );
+
   const result = [];
   for (let i = 0; i <= options.maxZoom; i++) {
     const el: any = {
       lat: data.lat,
       lon: data.lon,
-      pos: origData.positions[i],
-      cell: origData.cells[i],
+      pos: nums[i],
+      cell: cells[i],
       timestamp: data.timestamp,
       zoom: i,
     };
@@ -111,37 +121,9 @@ export function parseElement(options: any, origData: any): any[] {
     options.extraColumns.forEach((k) => {
       el[k] = data[k];
     });
+
     result.push(el);
   }
-
-  // const nums = getTileNums(data.lon, data.lat, options.maxZoom);
-
-  // const cells = getCells(
-  //   options.maxZoom,
-  //   options.cellsByZoom,
-  //   data.lon,
-  //   data.lat,
-  // );
-
-  // const result = [];
-  // for (let i = 0; i <= options.maxZoom; i++) {
-  //   const el: any = {
-  //     lat: data.lat,
-  //     lon: data.lon,
-  //     pos: nums[i],
-  //     cell: cells[i],
-  //     timestamp: data.timestamp,
-  //     zoom: i,
-  //   };
-  //   if (options.heatmap) {
-  //     el.htime = data.htime;
-  //   }
-  //   options.extraColumns.forEach((k) => {
-  //     el[k] = data[k];
-  //   });
-
-  //   result.push(el);
-  // }
 
   return result;
 }
