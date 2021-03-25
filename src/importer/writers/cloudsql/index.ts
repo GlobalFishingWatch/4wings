@@ -37,6 +37,8 @@ export default class CloudSQLWriter implements Writer {
   partitionName: string;
   startDate: string;
   endDate: string;
+  importStartDate: string;
+  importEndDate: string;
   constructor(
     private options: any,
     private date: string,
@@ -67,8 +69,39 @@ export default class CloudSQLWriter implements Writer {
         this.partitionName = `${this.year}`;
         this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${this.partitionName}`;
       }
+      const importDate = new Date(this.date);
       if (period === 'daily') {
-        this.options.target.tmpStorage.dir = `${this.options.target.tmpStorage.dir}_${date.replace(/-/, '_')}`;
+        this.importStartDate = this.date;
+        this.importEndDate = DateTime.utc(
+          importDate.getFullYear(),
+          importDate.getMonth(),
+          importDate.getDate(),
+        )
+          .plus({ day: 1 })
+          .toISO()
+          .slice(0, 10);
+        this.options.target.tmpStorage.dir = `${
+          this.options.target.tmpStorage.dir
+        }_${date.replace(/-/, '_')}`;
+      } else if (period === 'monthly') {
+        const luxonDate = DateTime.utc(
+          importDate.getFullYear(),
+          importDate.getMonth(),
+        );
+        this.importStartDate = luxonDate.startOf('month').toISO().slice(0, 10);
+        this.importEndDate = luxonDate
+          .startOf('month')
+          .plus({ month: 1 })
+          .toISO()
+          .slice(0, 10);
+      } else if (period === 'yearly') {
+        const luxonDate = DateTime.utc(importDate.getFullYear());
+        this.importStartDate = luxonDate.startOf('year').toISO().slice(0, 10);
+        this.importEndDate = luxonDate
+          .startOf('year')
+          .plus({ year: 1 })
+          .toISO()
+          .slice(0, 10);
       }
     }
   }
@@ -90,12 +123,15 @@ export default class CloudSQLWriter implements Writer {
       extraColumns: this.options.target.columnsDefinition,
       partitioned: this.options.target.partitioned ? true : false,
       partitionName: this.partitionName,
+      importStartDate: this.importStartDate,
+      importEndDate: this.importEndDate,
     };
+    console.log(generationOptions);
     const tables = await ejs.renderFile(
       `${__dirname}/templates/tables.ejs`,
       generationOptions,
     );
-
+    console.log(tables);
     await this.pool.query(tables);
     logger.debug('Tables created successfully');
   }
