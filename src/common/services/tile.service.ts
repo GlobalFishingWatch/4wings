@@ -31,12 +31,16 @@ export class TileService {
     filters: any[] = null,
     temporalAggregation = false,
     interval?,
+    resolution?,
   ) {
     // static async generateQuery(ctx: Koa.ParameterizedContext) {
     const pos = tile2Num(coords.z, coords.x, coords.y);
     let intervalTable = '';
     if (interval === 86400) {
       intervalTable = 'day';
+      if (resolution === 'day') {
+        intervalTable = '';
+      }
     } else if (interval === 864000) {
       intervalTable = '10days';
     }

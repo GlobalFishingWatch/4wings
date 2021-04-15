@@ -93,6 +93,7 @@ async function generateTileHeatmap(options, date, coords) {
           [filters],
           options.heatmap.temporalAggregation,
           interval,
+          options.heatmap.resolution,
         );
 
         const data = await getPool(options).query(query[0]);
