@@ -35,6 +35,7 @@ function getPool(dataset) {
 
 async function generateTileHeatmap(options, date, coords) {
   try {
+    logger.debug('Generating tile for coords ' + JSON.stringify(coords));
     if (options.heatmap.temporalAggregation) {
       const query = await TileService.generateQuery(
         coords,
@@ -43,6 +44,7 @@ async function generateTileHeatmap(options, date, coords) {
         [],
         options.heatmap.temporalAggregation,
       );
+      logger.debug(`Doing query for temporal aggregation`);
       const data = await getPool(options).query(query[0]);
       if (!data || data.rows.length === 0) {
         console.log('no-tile');
@@ -56,6 +58,7 @@ async function generateTileHeatmap(options, date, coords) {
         { temporalAggregation: options.heatmap.temporalAggregation },
         'heatmap',
       );
+      logger.debug('Heatmap generated!');
       await uploadGCSBuffer(options, 'heatmap', null, date, coords, buff);
 
       logger.debug('Generating heatmap (intArray) tile');
@@ -66,7 +69,7 @@ async function generateTileHeatmap(options, date, coords) {
         { temporalAggregation: options.heatmap.temporalAggregation },
         'intArray',
       );
-
+      logger.debug('Intarray generated!');
       await uploadGCSBuffer(options, 'intArray', null, date, coords, buff);
     } else {
       for (let i = 0; i < options.cache.periods.length; i++) {
@@ -85,7 +88,7 @@ async function generateTileHeatmap(options, date, coords) {
         } else if (period === 'all') {
           interval = 86400 * 10;
         }
-
+        logger.debug(`Doing query for period ${period}`);
         const query = await TileService.generateQuery(
           coords,
           [[options]],
@@ -110,6 +113,7 @@ async function generateTileHeatmap(options, date, coords) {
           'heatmap',
           interval,
         );
+        logger.debug('Heatmap generated!');
         await uploadGCSBuffer(options, 'heatmap', period, date, coords, buff);
 
         logger.debug('Generating heatmap (intArray) tile');
@@ -121,7 +125,7 @@ async function generateTileHeatmap(options, date, coords) {
           'intArray',
           interval,
         );
-
+        logger.debug('Intarray generated!');
         await uploadGCSBuffer(options, 'intArray', period, date, coords, buff);
       }
     }
