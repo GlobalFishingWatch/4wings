@@ -274,10 +274,13 @@ export default class CloudSQLWriter implements Writer {
         ...this.options,
         startDate: this.startDate,
         endDate: this.endDate,
+        importStartDate: this.importStartDate,
+        importEndDate: this.importEndDate,
         extraColumns: this.options.target.columnsDefinition,
         partitioned: this.options.target.partitioned ? true : false,
         partitionName: this.partitionName,
         groupColumn: this.options.heatmap.columns[0],
+        ds: this.date,
       };
 
       logger.debug(`Creating resampling `);
