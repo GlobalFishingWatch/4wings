@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
  group_date timestamp
 <% } %>
 );
-<% if (locals.partitioned) { %>
+<% if (locals.partitioned && locals.addMarkColumn) { %>
 DELETE FROM "<%=name%>_z<%=i%>_10days" where group_date between '<%=importStartDate%>' and '<%=importEndDate%>';
 <% } %>
 
