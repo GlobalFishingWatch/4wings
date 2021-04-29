@@ -39,6 +39,10 @@ export async function run(
     overrideConfig,
   });
 
+  if (config.target && !config.target.addMarkColumn) {
+    config.addMarkColumn = false;
+  }
+
   let reader: Reader;
   let writer: Writer;
   try {
