@@ -45,9 +45,9 @@ CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_index" ON "<%=name%>_z<%=i%>"(pos,
 <% } %>
 
 <% if (locals.partitioned) { %>
-delete from "<%=name%>_z<%=i%>_<%=partitionName%>" where timestamp between '<%=importStartDate%>' and '<%=importEndDate%>';
+delete from "<%=name%>_z<%=i%>_<%=partitionName%>" where timestamp >= '<%=importStartDate%>' AND timestamp < '<%=importEndDate%>';
 <% } else {%>
-delete from "<%=name%>_z<%=i%>" where timestamp between '<%=importStartDate%>' and '<%=importEndDate%>';
+delete from "<%=name%>_z<%=i%>" where timestamp >= '<%=importStartDate%>' AND timestamp < '<%=importEndDate%>';
 <% }%>
 <% }%>
 

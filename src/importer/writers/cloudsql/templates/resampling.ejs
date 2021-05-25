@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_10days" (
 <% } %>
 );
 <% if (locals.partitioned && locals.target.addMarkColumn) { %>
-DELETE FROM "<%=name%>_z<%=i%>_10days" where group_date between '<%=importStartDate%>' and '<%=importEndDate%>';
+DELETE FROM "<%=name%>_z<%=i%>_10days" where group_date >= '<%=importStartDate%>' and group_date < '<%=importEndDate%>';
 <% } %>
 
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day" (
 
 <% if (locals.partitioned) { %>
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_day_<%=partitionName%>"  PARTITION of "<%=name%>_z<%=i%>_day" for values from ('<%=startDate%>') to ('<%=endDate%>');
-DELETE FROM "<%=name%>_z<%=i%>_day_<%=partitionName%>" where timestamp between '<%=importStartDate%>' and '<%=importEndDate%>';
+DELETE FROM "<%=name%>_z<%=i%>_day_<%=partitionName%>" where timestamp >= '<%=importStartDate%>' and timestamp < '<%=importEndDate%>';
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
 CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_10days_index" ON "<%=name%>_z<%=i%>_10days"(pos, cell, htime<%if (searchColumns && searchColumns.length >0) { %>, <%= searchColumns.join(',') %> <%}%>);
