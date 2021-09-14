@@ -10,11 +10,15 @@ CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>" (
  htime integer,
  <% } %>
  cell integer NOT NULL
+ <%= i === 0 ? ', geom GEOMETRY NULL' : ''%>
 ) 
 <% if (locals.partitioned) { %>PARTITION BY RANGE (timestamp)<%}%>;
 
 <% if (locals.partitioned) { %>
 CREATE TABLE IF NOT EXISTS "<%=name%>_z<%=i%>_<%=partitionName%>"  PARTITION of "<%=name%>_z<%=i%>" for values from ('<%=startDate%>') to ('<%=endDate%>');
+<% if (i === 0) { %>
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_<%=partitionName%>_geom_index" ON "<%=name%>_z<%=i%>_<%=partitionName%>"(geom);
+<% } %>
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
 CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_<%=partitionName%>_index" ON "<%=name%>_z<%=i%>_<%=partitionName%>"(pos, cell, htime, <%= searchColumns.join(',') %>);
@@ -29,6 +33,9 @@ CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_<%=partitionName%>_index" ON "<%=n
   <% } %>
 <% }%>
 <%} else {%>
+<% if (i === 0) { %>
+CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_geom_index" ON "<%=name%>_z<%=i%>"(geom);
+<% } %>
 <% if (locals.searchColumns && locals.searchColumns.length > 0) { %>
   <% if (locals.heatmap) { %>
 CREATE INDEX IF NOT EXISTS "<%=name%>_z<%=i%>_index" ON "<%=name%>_z<%=i%>"(pos, cell, htime, <%= searchColumns.join(',') %>);

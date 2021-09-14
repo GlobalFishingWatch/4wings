@@ -171,6 +171,37 @@ export default class CloudSQLWriter implements Writer {
     }
   }
 
+  async createGeom() {
+    let client;
+    try {
+      logger.debug('Updating geom column');
+      const generationOptions = {
+        ...this.options,
+        startDate: this.startDate,
+        endDate: this.endDate,
+        year: this.year,
+        partitioned: this.options.target.partitioned ? true : false,
+        partitionName: this.partitionName,
+      };
+      const tables = await ejs.renderFile(
+        `${__dirname}/templates/update-geom.ejs`,
+        generationOptions,
+      );
+      client = await this.pool.connect();
+      await client.query(tables);
+      client.release();
+
+      logger.debug('Table updated geom successfully');
+    } catch (err) {
+      logger.error('Error updating geom column', err);
+      throw err;
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+
   async uploadData() {
     for (let i = 0; i <= this.options.maxZoom; i++) {
       logger.debug(`Uploading file: ${this.tmpDir}/${i}.csv`);
@@ -262,6 +293,7 @@ export default class CloudSQLWriter implements Writer {
       await this.deleteData();
     }
     await this.insertData();
+    await this.createGeom();
     await this.clusterData();
     await this.resamplingData();
   }

@@ -1,0 +1,5 @@
+<% if (locals.partitioned) { %>
+UPDATE "<%=name%>_z0_<%=partitionName%>" SET geom = ST_SetSRID(ST_MakePoint(lon, lat),4326) where geom is null;
+<% } else { %>
+UPDATE "<%=name%>_z<%=level%>" SET geom = ST_SetSRID(ST_MakePoint(lon, lat),4326) where geom is null;
+<% } %>
