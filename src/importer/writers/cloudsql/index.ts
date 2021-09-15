@@ -293,7 +293,7 @@ export default class CloudSQLWriter implements Writer {
       await this.deleteData();
     }
     await this.insertData();
-    if (this.options.target.geom) {
+    if (this.options.target.addGeomColumn) {
       await this.createGeom();
     }
     await this.clusterData();
