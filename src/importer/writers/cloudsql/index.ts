@@ -189,7 +189,6 @@ export default class CloudSQLWriter implements Writer {
       );
       client = await this.pool.connect();
       await client.query(tables);
-      client.release();
 
       logger.debug('Table updated geom successfully');
     } catch (err) {
