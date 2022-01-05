@@ -22,7 +22,7 @@ The data model consists in presenting spatiotemporal dataset in a gridded format
 The **client-side** aspect of 4wings consists of:
 
 - a custom fork of <a href="https://github.com/GlobalFishingWatch/maplibre-gl-js/pull/1">MapLibre GL JS</a>
-- <a href="https://github.com/GlobalFishingWatch/layer-composer/">layer-composer</a>, a tool to prepare a MapLibre GL JSON style</a> 
+- <a href="https://github.com/GlobalFishingWatch/frontend/tree/develop/libs/layer-composer">layer-composer</a>, a tool to prepare a MapLibre GL JSON style</a> 
 
 This repository contains the **back-end components** of 4wings, made of 3 apps:
 
