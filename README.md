@@ -15,14 +15,14 @@ The data model consists in presenting spatiotemporal dataset in a gridded format
 - which resolution per tile can vary depending on the part of the world (to maintain a stable cell real coverage at a given zoom level) and the zoom level (resolution gets higher at higher zoom levels as a less dense grid allows it)
 - where each cell contains data for a given span of time, in a time resolution variable depending on the tile time span
 - presentend by the API as Protobuffers containing an integer array 
-- converted on the fly by a custom Mapbox GL Source implementation to an MVT tile
+- converted on the fly by a custom MapLibre GL Source implementation to an MVT tile
 - optionally aggregated on the fly for animation purposes
 - rendered by the GPU
 
 The **client-side** aspect of 4wings consists of:
 
-- a custom fork of <a href="https://github.com/GlobalFishingWatch/mapbox-gl-js">Mapbox GL JS</a> (and <a href="https://github.com/GlobalFishingWatch/react-map-gl/">react-map-gl</a>, its React bindings)
-- <a href="https://github.com/GlobalFishingWatch/layer-composer/">layer-composer</a>, a tool to prepare a Mapbox GL JSON style</a> 
+- a custom fork of <a href="https://github.com/GlobalFishingWatch/maplibre-gl-js/pull/1">MapLibre GL JS</a>
+- <a href="https://github.com/GlobalFishingWatch/layer-composer/">layer-composer</a>, a tool to prepare a MapLibre GL JSON style</a> 
 
 This repository contains the **back-end components** of 4wings, made of 3 apps:
 
