@@ -24,7 +24,7 @@
     "@koa/router": "^8.0.8",
     "@mapbox/tilebelt": "^1.0.1",
     "args-parser": "^1.1.0",
-    "auth-middleware": "git://github.com/GlobalFishingWatch/auth-middleware.git#develop",
+    "auth-middleware": "https://github.com/GlobalFishingWatch/auth-middleware.git#develop",
     "avsc": "^5.5.3",
     "axios": "^0.19.2",
     "csv-parser": "^2.3.2",
